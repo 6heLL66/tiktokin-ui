@@ -9,7 +9,7 @@ export const WalletConnect = () => {
     return (
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {!publicKey && <WalletMultiButton style={{
-                background: 'linear-gradient(to right, #8B5CF6, #3B82F6)',
+                background: '#121212',
                 color: 'white',
                 padding: '0.25rem 1rem',
                 borderRadius: '0.5rem',
@@ -17,11 +17,11 @@ export const WalletConnect = () => {
                 fontSize: '1rem',
                 height: '44px',
                 transition: 'all 0.3s ease',
-                border: 'none',
+                border: '1px solid #2D2D2D',
                 cursor: 'pointer'
             }}> Connect Wallet </WalletMultiButton>}
            {publicKey && <WalletDisconnectButton style={{
-                background: 'linear-gradient(to right, #F43F5E, #EC4899)',
+                background: '#121212',
                 color: 'white',
                 padding: '0.25rem 1rem',
                 borderRadius: '0.5rem',
@@ -29,9 +29,11 @@ export const WalletConnect = () => {
                 fontSize: '1rem',
                 height: '44px',
                 transition: 'all 0.3s ease',
-                border: 'none',
+                border: '1px solid #2D2D2D',
                 cursor: 'pointer'
-            }} />}
+            }}>
+                {publicKey.toString().slice(0, 4)}...{publicKey.toString().slice(-4)}
+            </WalletDisconnectButton>}
         </div>
     )
 }

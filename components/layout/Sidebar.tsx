@@ -18,8 +18,8 @@ export default function Sidebar() {
           {[
             { href: "/", icon: IconHome, label: "TikTokins" },
             { href: "/token", icon: IconCoin, label: "TikTokIn Token" },
-            { href: "/create-token", icon: IconQuestionMark, label: "What is Tiktokin?" },
-            { href: "/create-token", icon: IconInfoCircle, label: "How to create " },
+            { href: "/what-is-tiktokin", icon: IconQuestionMark, label: "What is Tiktokin?" },
+            { href: "/how-to-create-tiktokin", icon: IconInfoCircle, label: "How to create " },
           ].map((item) => (
             <Link
               key={item.href}
@@ -40,12 +40,12 @@ export default function Sidebar() {
       <div className="mt-auto p-6 border-t border-zinc-800/50">
         <div className="flex items-center justify-center gap-8">
           {[
-            { href: "#", icon: IconBrandDiscord },
-            { href: "#", icon: IconBrandTwitter },
-            { href: "#", icon: IconBrandTiktok },
+            { href: "https://discord.gg/tiktokin", icon: IconBrandDiscord },
+            { href: "https://twitter.com/tiktokin", icon: IconBrandTwitter },
+            { href: "https://tiktok.com/@tiktokin", icon: IconBrandTiktok },
           ].map((social, index) => (
             <a
-              key={index}
+              key={social.href}
               href={social.href}
               className="text-zinc-400 hover:text-zinc-100 transition-all duration-200 hover:scale-110 hover:text-violet-400"
             >
