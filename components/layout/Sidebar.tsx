@@ -43,7 +43,7 @@ export default function Sidebar() {
             { href: "https://discord.gg/tiktokin", icon: IconBrandDiscord },
             { href: "https://twitter.com/tiktokin", icon: IconBrandTwitter },
             { href: "https://tiktok.com/@tiktokin", icon: IconBrandTiktok },
-          ].map((social, index) => (
+          ].map((social) => (
             <a
               key={social.href}
               href={social.href}
