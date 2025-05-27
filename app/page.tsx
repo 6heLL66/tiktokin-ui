@@ -2,38 +2,60 @@ import { TokenCard } from "./components/TokenCard"
 
 export default function Home() {
   return (
-    <div className="grid bg-[#1a1b1e] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col w-full max-w-8xl gap-12">
-        <section className="w-full space-y-8">
-          <h1 className="text-3xl font-medium text-white/90">
-            Discover Tokens
-          </h1>
+    <div className="min-h-screen bg-gradient-to-b from-[#1a1b1e] to-[#141517] p-8 pb-20 sm:p-20">
+      <main className="mx-auto max-w-8xl">
+        <section className="space-y-10">
+          <div className="flex flex-col gap-4">
+            <h1 className="bg-gradient-to-r from-white to-white/70 bg-clip-text text-4xl font-bold text-transparent sm:text-5xl">
+              Discover Tokens
+            </h1>
+            <p className="text-lg text-white/60">
+              Explore and find the most promising tokens in the market
+            </p>
+          </div>
           
           <div className="relative">
             <input
               type="text"
               placeholder="Search tokens..."
-              className="w-full px-6 py-4 bg-[#121212] rounded-2xl border border-[#2D2D2D] focus:border-white/20 outline-none transition-all text-white/90 text-sm"
+              className="w-full rounded-2xl bg-[#121212]/80 px-6 py-5 text-base backdrop-blur-sm
+                border border-white/5 hover:border-white/10
+                focus:border-white/20 focus:outline-none focus:ring-2 focus:ring-white/5
+                transition-all duration-200 text-white/90"
             />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40">
+              ⌘K
+            </div>
           </div>
           
-          <div className="flex gap-4 items-center flex-wrap">
-            <h2 className="text-[15px] font-medium text-white/90">Sort by:</h2>
-            <div className="flex gap-2">
-              <button className="px-4 py-2.5 rounded-xl bg-[#121212] hover:bg-[#1D1D1D] border border-[#2D2D2D] hover:border-white/20 transition-all text-white/80 text-sm">
-                Market Cap
-              </button>
-              <button className="px-4 py-2.5 rounded-xl bg-[#121212] hover:bg-[#1D1D1D] border border-[#2D2D2D] hover:border-white/20 transition-all text-white/80 text-sm">
-                Last Trade
-              </button>
-              <button className="px-4 py-2.5 rounded-xl bg-[#121212] hover:bg-[#1D1D1D] border border-[#2D2D2D] hover:border-white/20 transition-all text-white/80 text-sm">
-                Creation Time
-              </button>
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-4">
+              <h2 className="text-[15px] font-medium text-white/90">Sort by:</h2>
+              <div className="flex flex-wrap gap-2">
+                <button className="rounded-xl bg-white/5 px-5 py-3 text-sm font-medium
+                  text-white/80 hover:bg-white/10 hover:text-white
+                  border border-white/5 hover:border-white/10
+                  transition-all duration-200">
+                  Market Cap
+                </button>
+                <button className="rounded-xl bg-white/5 px-5 py-3 text-sm font-medium
+                  text-white/80 hover:bg-white/10 hover:text-white
+                  border border-white/5 hover:border-white/10
+                  transition-all duration-200">
+                  Last Trade
+                </button>
+                <button className="rounded-xl bg-white/5 px-5 py-3 text-sm font-medium
+                  text-white/80 hover:bg-white/10 hover:text-white
+                  border border-white/5 hover:border-white/10
+                  transition-all duration-200">
+                  Creation Time
+                </button>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <section className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <TokenCard key={i} index={i} />
           ))}
