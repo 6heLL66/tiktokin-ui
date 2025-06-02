@@ -1,7 +1,15 @@
 'use client'
 
+import { OpenAPI } from "@/api/tiktokin.ts";
 import { WalletProvider } from "./solana/WalletProvider/provider"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+
+const queryClient = new QueryClient();
+
+OpenAPI.BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export const Providers = ({children}: {children: React.ReactNode}) => {
-    return <WalletProvider>{children}</WalletProvider>
+    return <QueryClientProvider client={queryClient}>
+        <WalletProvider>{children}</WalletProvider>
+    </QueryClientProvider>
 }
