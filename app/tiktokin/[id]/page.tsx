@@ -18,17 +18,15 @@ import { useSlippage } from '@/features/useSlippage'
 import { WalletConnect } from '@/app/solana/WalletProvider/ui'
 import { useTokenReserves } from '@/features/useTokenReserves'
 
-
-
 const TiktokinPage: FC = () => {
-  const { data: {tiktokinProgram, connection, provider}, checkAndGetCreateAssociatedTokenAccountIx } = useAnchor();
+  const { data: {tiktokinProgram, connection, provider} } = useAnchor();
   const wallet = useWallet();
   const { id } = useParams();
   const {slippage} = useSlippage();
   const { tokens } = useTokensList();
   const token = tokens?.find((token) => token.address === id);
 
-  const {balance, updateBalance} = useBalance();
+  const {balance} = useBalance();
   useTokenReserves(token?.address);
 
   const [amount, setAmount] = useState(0);
