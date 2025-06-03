@@ -8,9 +8,15 @@ import { useTokensList } from '@/features/useTokensList'
 import { MoonLoader } from 'react-spinners'
 import { useParams } from 'next/navigation'
 import { BN } from '@coral-xyz/anchor'
-import { PublicKey } from '@solana/web3.js'
+import BigNumber from "bignumber.js";
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { useBalance } from '@/features/useBalance'
+import { SlippageModal } from '@/app/components/SlippageModal'
+import { useToken } from '@/features/useToken'
+import { useSlippage } from '@/features/useSlippage'
+import { WalletConnect } from '@/app/solana/WalletProvider/ui'
+import { useTokenReserves } from '@/features/useTokenReserves'
 
 
 
@@ -18,10 +24,18 @@ const TiktokinPage: FC = () => {
   const { data: {tiktokinProgram, connection, provider}, checkAndGetCreateAssociatedTokenAccountIx } = useAnchor();
   const wallet = useWallet();
   const { id } = useParams();
+  const {slippage} = useSlippage();
   const { tokens } = useTokensList();
   const token = tokens?.find((token) => token.address === id);
 
+  const {balance, updateBalance} = useBalance();
+  useTokenReserves(token?.address);
+
   const [amount, setAmount] = useState(0);
+  const [isSlippageModalOpen, setIsSlippageModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'buy' | 'sell'>('buy')
+
+  const {tokenInfo} = useToken(token?.address);
 
   const handleBuy = async() => {
     if (!token || Number.isNaN(amount) || !wallet.publicKey) return;
@@ -32,16 +46,9 @@ const TiktokinPage: FC = () => {
     );
 
     const configAccount = await tiktokinProgram.account.config.fetch(configPda);
+    const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
 
-    // Check if we need to create ATAs
-    const createUserAtaIx = await checkAndGetCreateAssociatedTokenAccountIx(
-      wallet.publicKey,
-      NATIVE_MINT,
-      tiktokinProgram.programId,
-      TOKEN_PROGRAM_ID
-    );
-
-    const tx = await tiktokinProgram?.methods.swap(new BN(amount), new BN(0), new BN(amount))
+    const tx = await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toNumber()), new BN(0), new BN(lamportsAmount.dividedBy(new BigNumber(slippage / 100)).toNumber()))
       .accounts({
         feeRecipient: configAccount.feeRecipient,
         tokenMint: new PublicKey(token.address),
@@ -144,31 +151,133 @@ const TiktokinPage: FC = () => {
           {/* Trading Panel */}
           <div className="w-[280px] shrink-0">
             <div className="bg-[#1A1B1E] border border-[#2A2B2E] rounded-lg p-4 sticky top-20">
-              <h2 className="text-sm font-bold mb-3">Trade</h2>
+              <div className="flex items-center gap-2 mb-4">
+                <button 
+                  onClick={() => setActiveTab('buy')}
+                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'buy' 
+                      ? 'bg-[#14F195] text-black' 
+                      : 'bg-[#2A2B2E] text-white hover:bg-[#3A3B3E]'
+                  }`}
+                >
+                  Buy
+                </button>
+                <button 
+                  onClick={() => setActiveTab('sell')}
+                  className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'sell' 
+                      ? 'bg-[#9945FF] text-white' 
+                      : 'bg-[#2A2B2E] text-white hover:bg-[#3A3B3E]'
+                  }`}
+                >
+                  Sell
+                </button>
+              </div>
+
               <div className="space-y-3">
+                <button 
+                  onClick={() => setIsSlippageModalOpen(true)}
+                  className="w-full flex items-center justify-between px-3 py-2 bg-[#2A2B2E] rounded-md text-sm hover:bg-[#3A3B3E] transition-colors"
+                >
+                  <span className="text-[#707070]">Slippage Tolerance</span>
+                  <span>{slippage}%</span>
+                </button>
+
                 <div className="p-3 rounded-md bg-[#0F1011] border border-[#2A2B2E]">
                   <div className="flex justify-between items-center mb-2 text-sm">
                     <span className="text-[#707070]">Balance</span>
-                    <span>0 SOL</span>
+                    <span>{activeTab === 'buy' ? `${balance.toNumber().toFixed(6)} SOL` : `${tokenInfo?.balance} ${token.symbol}`}</span>
                   </div>
+
                   <div>
                     <label className="block text-xs text-[#707070] mb-1.5">Amount</label>
-                    <input 
-                      type="number"
-                      onChange={(e) => setAmount(Number(e.target.value))}
-                      className="w-full bg-[#1A1B1E] border border-[#2A2B2E] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#9945FF]"
-                      placeholder="0.00"
-                    />
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(Number(e.target.value))}
+                        className="w-full bg-[#1A1B1E] border border-[#2A2B2E] rounded-md pl-3 pr-24 py-2 text-sm focus:outline-none focus:border-[#9945FF]"
+                        placeholder="0.00"
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-[#2A2B2E] px-2 py-1 rounded">
+                        <img src={activeTab === 'buy' ? "https://statics.solscan.io/solscan-img/solana_icon.svg" : token.uri} alt="token" className="w-4 h-4 rounded-full" />
+                        <span className="text-sm">{activeTab === 'buy' ? 'SOL' : token.symbol}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-1 mt-2">
+                      {activeTab === 'buy' ? (
+                        <>
+                          <button 
+                            onClick={() => setAmount(0.1)}
+                            className="px-1 py-1 bg-[#2A2B2E] rounded text-[11px] hover:bg-[#3A3B3E] transition-colors cursor-pointer"
+                          >
+                            0.1 SOL
+                          </button>
+                          <button 
+                            onClick={() => setAmount(0.5)}
+                            className="px-1 py-1 bg-[#2A2B2E] rounded text-[11px] hover:bg-[#3A3B3E] transition-colors cursor-pointer"
+                          >
+                            0.5 SOL
+                          </button>
+                          <button 
+                            onClick={() => setAmount(1)}
+                            className="px-1 py-1 bg-[#2A2B2E] rounded text-[11px] hover:bg-[#3A3B3E] transition-colors cursor-pointer"
+                          >
+                            1 SOL
+                          </button>
+                          <button 
+                            onClick={() => setAmount(balance.toNumber())}
+                            className="px-1 py-1 bg-[#2A2B2E] rounded text-[11px] hover:bg-[#3A3B3E] transition-colors cursor-pointer"
+                          >
+                            MAX
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={() => setAmount(Number(tokenInfo?.balance) * 0.25)}
+                            className="px-1 py-1 bg-[#2A2B2E] rounded text-[11px] hover:bg-[#3A3B3E] transition-colors cursor-pointer"
+                          >
+                            25%
+                          </button>
+                          <button 
+                            onClick={() => setAmount(Number(tokenInfo?.balance) * 0.5)}
+                            className="px-1 py-1 bg-[#2A2B2E] rounded text-[11px] hover:bg-[#3A3B3E] transition-colors cursor-pointer"
+                          >
+                            50%
+                          </button>
+                          <button 
+                            onClick={() => setAmount(Number(tokenInfo?.balance) * 0.75)}
+                            className="px-1 py-1 bg-[#2A2B2E] rounded text-[11px] hover:bg-[#3A3B3E] transition-colors cursor-pointer"
+                          >
+                            75%
+                          </button>
+                          <button 
+                            onClick={() => setAmount(Number(tokenInfo?.balance))}
+                            className="px-1 py-1 bg-[#2A2B2E] rounded text-[11px] hover:bg-[#3A3B3E] transition-colors cursor-pointer"
+                          >
+                            MAX
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <button className="w-full py-2 bg-[#14F195] text-black rounded-md text-sm font-medium hover:bg-[#13E085]" onClick={handleBuy}>
-                  Buy Token
-                </button>
-                <button className="w-full py-2 bg-[#9945FF] rounded-md text-sm font-medium hover:bg-[#8935FF]">
-                  Sell Token
-                </button>
+
+                {wallet.publicKey ? <button 
+                  className={`w-full py-2 rounded-md text-sm font-medium ${
+                    activeTab === 'buy'
+                      ? 'bg-[#14F195] text-black hover:bg-[#13E085]'
+                      : 'bg-[#9945FF] text-white hover:bg-[#8935FF]'
+                  }`}
+                  onClick={activeTab === 'buy' ? handleBuy : handleSell}
+                >
+                  {activeTab === 'buy' ? 'Buy' : 'Sell'} {token.symbol}
+                </button> : <div className='flex justify-center items-center h-full'><WalletConnect /></div>}
+
                 <div className="text-center text-xs text-[#707070]">
-                  1 USDC = 1000 TOKEN
+                  1 SOL = 1000 {token.symbol}
                 </div>
               </div>
             </div>
@@ -176,6 +285,11 @@ const TiktokinPage: FC = () => {
         </div>
         
       </div>
+
+      <SlippageModal
+        isOpen={isSlippageModalOpen}
+        onClose={() => setIsSlippageModalOpen(false)}
+      />
     </div>
   )
 }

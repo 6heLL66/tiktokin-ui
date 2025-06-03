@@ -5,7 +5,7 @@ export const useTokensList = () => {
     const tokensListQuery = useQuery({
         queryKey: ["tokens"],
         queryFn: () => TokenService.tokenListTokensGet(),
-    });
+    }); 
 
     return {
         query: tokensListQuery,
