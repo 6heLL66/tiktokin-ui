@@ -1,6 +1,6 @@
 'use client'
 
-import { OpenAPI } from "@/api/tiktokin.ts";
+import { OpenAPI } from "@/shared/api/tiktokin.ts";
 import { WalletProvider } from "./solana/WalletProvider/provider"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 

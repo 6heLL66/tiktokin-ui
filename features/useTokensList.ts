@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { TokenService } from "@/api/tiktokin.ts";
+import { TokenService } from "@/shared/api/tiktokin.ts";
 
 export const useTokensList = () => {
     const tokensListQuery = useQuery({

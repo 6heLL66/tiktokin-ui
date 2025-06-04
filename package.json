@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "generate-api": "npx openapi --input https://tiktokin-backend-171466234ee5.herokuapp.com/openapi.json --output ./api/tiktokin.ts"
+    "generate-api": "npx openapi --input https://tiktokin-backend-171466234ee5.herokuapp.com/openapi.json --output ./shared/api/tiktokin.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",

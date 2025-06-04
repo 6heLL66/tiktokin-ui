@@ -1,5 +1,5 @@
 'use client'
-import { TokenDto } from "@/api/tiktokin.ts";
+import { TokenDto } from "@/shared/api/tiktokin.ts";
 import { IconCopy } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 
