@@ -3,7 +3,7 @@ import { TokenDto } from "@/api/tiktokin.ts";
 import { IconCopy } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 
-export const TokenCard = ({ token, index }: { token: TokenDto, index: number }) => {
+export const TokenCard = ({ token }: { token: TokenDto, index: number }) => {
   const router = useRouter();
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#2D2D2D] bg-[#121212] hover:border-white/20 transition-all" onClick={() => router.push(`/tiktokin/${token.address}`)}>

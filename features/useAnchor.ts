@@ -14,7 +14,7 @@ interface AnchorData {
     connection: Connection;
 }
 
-const TIKTOKIN_PROGRAM_ID = new PublicKey("EEW2zzHxLCJhTeDx6RXnifvY26ump5M1gmUQarTqJj1L");
+const TIKTOKIN_PROGRAM_ID = new PublicKey("B9vVYVUQTkqftrYzmvj36GpraotLseR6UPz59gUktQQF");
 
 export const useAnchor = () => {
     const wallet = useWallet();

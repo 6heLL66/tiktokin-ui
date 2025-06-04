@@ -2,7 +2,6 @@
 
 import { FC, useState } from 'react'
 import {PriceChart} from '@/app/components/PriceChart'
-import { Time } from 'lightweight-charts'
 import { useAnchor } from '@/features/useAnchor'
 import { useTokensList } from '@/features/useTokensList'
 import { MoonLoader } from 'react-spinners'
@@ -16,7 +15,42 @@ import { SlippageModal } from '@/app/components/SlippageModal'
 import { useToken } from '@/features/useToken'
 import { useSlippage } from '@/features/useSlippage'
 import { WalletConnect } from '@/app/solana/WalletProvider/ui'
-import { useTokenReserves } from '@/features/useTokenReserves'
+import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+
+const CP_SWAP_PROGRAM_ID = new PublicKey('CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW');
+
+function getPoolState(
+  ammConfig: PublicKey,
+  token0Mint: PublicKey,
+  token1Mint: PublicKey,
+): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("pool", "utf8"),
+      ammConfig.toBuffer(),
+      token0Mint.toBuffer(),
+      token1Mint.toBuffer()
+    ],
+    CP_SWAP_PROGRAM_ID
+  )[0];
+}
+
+function getLpMint(poolId: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("pool_lp_mint", "utf8"),
+      poolId.toBuffer()
+    ],
+    CP_SWAP_PROGRAM_ID
+  )[0];
+}
+
+export function getPdaLpMint(
+  programId: PublicKey,
+  poolId: PublicKey,
+): PublicKey {
+  return PublicKey.findProgramAddressSync([Buffer.from("pool_lp_mint", "utf8"), poolId.toBuffer()], programId)[0];
+}
 
 const TiktokinPage: FC = () => {
   const { data: {tiktokinProgram, connection, provider} } = useAnchor();
@@ -27,7 +61,6 @@ const TiktokinPage: FC = () => {
   const token = tokens?.find((token) => token.address === id);
 
   const {balance} = useBalance();
-  useTokenReserves(token?.address);
 
   const [amount, setAmount] = useState(0);
   const [isSlippageModalOpen, setIsSlippageModalOpen] = useState(false)
@@ -46,7 +79,7 @@ const TiktokinPage: FC = () => {
     const configAccount = await tiktokinProgram.account.config.fetch(configPda);
     const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
 
-    const tx = await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toNumber()), new BN(0), new BN(lamportsAmount.dividedBy(new BigNumber(slippage / 100)).toNumber()))
+    const tx = await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toNumber()), new BN(0), new BN(0))
       .accounts({
         feeRecipient: configAccount.feeRecipient,
         tokenMint: new PublicKey(token.address),
@@ -63,8 +96,83 @@ const TiktokinPage: FC = () => {
     console.log(signature);
   }
 
-  const handleSell = () => {
-    console.log(amount);
+  const handleSell = async() => {
+    if (!token || Number.isNaN(amount) || !wallet.publicKey) return;
+
+    const [configPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('global-config')],
+      tiktokinProgram.programId
+    );
+
+    const configAccount = await tiktokinProgram.account.config.fetch(configPda);
+    const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
+
+    const tx = await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toNumber()), new BN(1), new BN(0))
+      .accounts({
+        feeRecipient: configAccount.feeRecipient,
+        tokenMint: new PublicKey(token.address),
+        user: wallet.publicKey,
+      })
+      .transaction();
+
+    tx.feePayer = wallet.publicKey;
+
+    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+    const signature = await provider?.sendAndConfirm(tx);
+
+    console.log(signature);
+  }
+
+  const migrate = async () => {
+    if (!token || !wallet.publicKey) return;
+
+    const ammConfig = new PublicKey('9zSzfkYy6awexsHvmggeH36pfVUdDGyCcwmjT3AQPBj6');
+    const token0Mint = NATIVE_MINT;
+    const token1Mint = new PublicKey(token.address);
+
+    const [curvePda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("bonding-curve"),
+        token1Mint.toBuffer()
+      ],
+      tiktokinProgram.programId
+    );
+
+    const poolState = getPoolState(ammConfig, token0Mint, token1Mint);
+    const lpMint = getLpMint(poolState);
+    
+    const creatorToken0Ata = getAssociatedTokenAddressSync(token0Mint, wallet.publicKey);
+    const creatorToken1Ata = getAssociatedTokenAddressSync(token1Mint, wallet.publicKey);
+    const creatorLpTokenAta = getAssociatedTokenAddressSync(lpMint, wallet.publicKey, false);
+
+    const curveTokenAta = getAssociatedTokenAddressSync(token1Mint, curvePda, true);
+
+    // const ix = await createAssociatedTokenAccountInstruction(wallet.publicKey, creatorToken0, curvePda, token0Mint);
+
+    // const tx = new Transaction().add(ix);
+
+    // const signature = await wallet.sendTransaction(tx, connection);
+
+    // console.log(signature);
+
+    tiktokinProgram?.methods.migrate(new BN(Date.now()))
+      .accounts({
+        creator: wallet.publicKey,
+        curveTokenAta: curveTokenAta,
+        token0Mint: token0Mint,
+        token1Mint: token1Mint,
+        creatorToken0: creatorToken0Ata,
+        creatorToken1: creatorToken1Ata,
+        creatorLpToken: creatorLpTokenAta,
+        token1Program: TOKEN_PROGRAM_ID,
+        token0Program: TOKEN_PROGRAM_ID,
+        ammConfig: ammConfig,
+      })
+      // .preInstructions([ix])
+      .rpc({skipPreflight: true}).catch((err) => {
+        console.log(err);
+      });
   }
 
   if (!token) {
@@ -74,6 +182,8 @@ const TiktokinPage: FC = () => {
   return (
     <div className="min-h-screen bg-[#0F1011] text-white p-4">
       <div className="max-w-8xl mx-auto space-y-4">
+
+        <button onClick={() => migrate()}>Migrate</button>
         
         {/* Token Info Header */}
         <div className="bg-[#1A1B1E] border border-[#2A2B2E] rounded-lg p-4">
@@ -120,7 +230,7 @@ const TiktokinPage: FC = () => {
                   ))}
                 </div>
               </div>
-              <PriceChart data={[{ open: 10, high: 10.63, low: 9.49, close: 9.55, time: 1642427876 as Time }, { open: 9.55, high: 10.30, low: 9.42, close: 9.94, time: 1642514276 as Time }, { open: 9.94, high: 10.17, low: 9.92, close: 9.78, time: 1642600676 }, { open: 9.78, high: 10.59, low: 9.18, close: 9.51, time: 1642687076 }, { open: 9.51, high: 10.46, low: 9.10, close: 10.17, time: 1642773476 }, { open: 10.17, high: 10.96, low: 10.16, close: 10.47, time: 1642859876 }, { open: 10.47, high: 11.39, low: 10.40, close: 10.81, time: 1642946276 }, { open: 10.81, high: 11.60, low: 10.30, close: 10.75, time: 1643032676 }, { open: 10.75, high: 11.60, low: 10.49, close: 10.93, time: 1643119076 }, { open: 10.93, high: 11.53, low: 10.76, close: 10.96, time: 1643205476 }]} />
+              <PriceChart data={[]} />
             </div>
 
             {/* Chat Section */}
