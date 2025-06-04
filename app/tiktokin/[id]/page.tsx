@@ -45,13 +45,6 @@ function getLpMint(poolId: PublicKey): PublicKey {
   )[0];
 }
 
-export function getPdaLpMint(
-  programId: PublicKey,
-  poolId: PublicKey,
-): PublicKey {
-  return PublicKey.findProgramAddressSync([Buffer.from("pool_lp_mint", "utf8"), poolId.toBuffer()], programId)[0];
-}
-
 const TiktokinPage: FC = () => {
   const { data: {tiktokinProgram, connection, provider} } = useAnchor();
   const wallet = useWallet();
