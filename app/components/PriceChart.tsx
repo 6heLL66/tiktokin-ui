@@ -54,6 +54,7 @@ export function PriceChart({ data }: PriceChartProps) {
       width: chartContainerRef.current.clientWidth
     };
 
+    // @ts-ignore
     const chart = createChart(chartContainerRef.current, chartOptions);
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#22c55e',
