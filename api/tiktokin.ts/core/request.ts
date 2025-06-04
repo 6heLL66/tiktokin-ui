@@ -42,7 +42,6 @@ export const base64 = (str: string): string => {
     try {
         return btoa(str);
     } catch (err) {
-        // @ts-expect-error
         return Buffer.from(str).toString('base64');
     }
 };
