@@ -8,6 +8,7 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { HTTPValidationError } from './models/HTTPValidationError';
+export type { Paginated_TokenDto_ } from './models/Paginated_TokenDto_';
 export type { TokenCreateRequestDto } from './models/TokenCreateRequestDto';
 export type { TokenDto } from './models/TokenDto';
 export type { TokenRetrieveDto } from './models/TokenRetrieveDto';

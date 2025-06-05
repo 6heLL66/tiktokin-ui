@@ -6,5 +6,6 @@ export type TokenCreateRequestDto = {
     name: string;
     symbol: string;
     uri: string;
+    video_url: string;
 };
 

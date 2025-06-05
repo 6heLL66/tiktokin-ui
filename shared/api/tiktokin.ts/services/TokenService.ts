@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Paginated_TokenDto_ } from '../models/Paginated_TokenDto_';
 import type { TokenCreateRequestDto } from '../models/TokenCreateRequestDto';
 import type { TokenDto } from '../models/TokenDto';
 import type { TokenRetrieveDto } from '../models/TokenRetrieveDto';
@@ -9,17 +10,6 @@ import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class TokenService {
-    /**
-     * Token List
-     * @returns TokenDto Successful Response
-     * @throws ApiError
-     */
-    public static tokenListTokensGet(): CancelablePromise<Array<TokenDto>> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/tokens',
-        });
-    }
     /**
      * Token Create
      * @param requestBody
@@ -34,6 +24,32 @@ export class TokenService {
             url: '/tokens',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Token List
+     * @param search
+     * @param limit Page size limit
+     * @param offset Page offset
+     * @returns Paginated_TokenDto_ Successful Response
+     * @throws ApiError
+     */
+    public static tokenListTokensGet(
+        search?: (string | null),
+        limit?: (number | null),
+        offset?: number,
+    ): CancelablePromise<Paginated_TokenDto_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/tokens',
+            query: {
+                'search': search,
+                'limit': limit,
+                'offset': offset,
+            },
             errors: {
                 422: `Validation Error`,
             },

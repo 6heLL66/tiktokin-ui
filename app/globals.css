@@ -22,3 +22,12 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+.tiktok-embed {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+img, iframe {
+  transition: opacity 0.5s ease;
+}

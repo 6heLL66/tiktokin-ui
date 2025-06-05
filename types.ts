@@ -152,13 +152,39 @@ export type Tiktokin = {
           }
         },
         {
-          "name": "curveTokenAccount",
+          "name": "liquidityPda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  113,
+                  117,
+                  105,
+                  100,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "liquidityTokenAta",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "bondingCurve"
+                "path": "liquidityPda"
               },
               {
                 "kind": "const",
@@ -310,7 +336,33 @@ export type Tiktokin = {
           ]
         },
         {
-          "name": "curveTokenAta",
+          "name": "liquidityPda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  113,
+                  117,
+                  105,
+                  100,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "token1Mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "liquidityTokenAta",
           "writable": true
         },
         {
@@ -718,16 +770,39 @@ export type Tiktokin = {
           }
         },
         {
-          "name": "tokenMint"
+          "name": "liquidityPda",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  113,
+                  117,
+                  105,
+                  100,
+                  105,
+                  116,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "tokenMint"
+              }
+            ]
+          }
         },
         {
-          "name": "curveTokenAccount",
+          "name": "liquidityTokenAccount",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "bondingCurve"
+                "path": "liquidityPda"
               },
               {
                 "kind": "const",
@@ -809,6 +884,9 @@ export type Tiktokin = {
               ]
             }
           }
+        },
+        {
+          "name": "tokenMint"
         },
         {
           "name": "userTokenAccount",
@@ -967,6 +1045,19 @@ export type Tiktokin = {
         250,
         204,
         130
+      ]
+    },
+    {
+      "name": "liquidityPda",
+      "discriminator": [
+        165,
+        80,
+        252,
+        167,
+        23,
+        85,
+        10,
+        23
       ]
     }
   ],
@@ -1172,6 +1263,13 @@ export type Tiktokin = {
             "type": "f64"
           }
         ]
+      }
+    },
+    {
+      "name": "liquidityPda",
+      "type": {
+        "kind": "struct",
+        "fields": []
       }
     }
   ]

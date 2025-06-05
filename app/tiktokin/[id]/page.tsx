@@ -8,7 +8,7 @@ import { MoonLoader } from 'react-spinners'
 import { useParams } from 'next/navigation'
 import { BN } from '@coral-xyz/anchor'
 import BigNumber from "bignumber.js";
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useBalance } from '@/features/useBalance'
 import { SlippageModal } from '@/app/components/SlippageModal'
@@ -16,6 +16,9 @@ import { useToken } from '@/features/useToken'
 import { useSlippage } from '@/features/useSlippage'
 import { WalletConnect } from '@/app/solana/WalletProvider/ui'
 import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { getMinAmountOut, solExchangeToTokenBuy } from '@/shared/utils'
+import { useQuery } from '@tanstack/react-query'
+import { TokenService } from '@/shared/api/tiktokin.ts'
 
 const CP_SWAP_PROGRAM_ID = new PublicKey('CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW');
 
@@ -47,11 +50,14 @@ function getLpMint(poolId: PublicKey): PublicKey {
 
 const TiktokinPage: FC = () => {
   const { data: {tiktokinProgram, connection, provider} } = useAnchor();
+
   const wallet = useWallet();
   const { id } = useParams();
   const {slippage} = useSlippage();
-  const { tokens } = useTokensList();
-  const token = tokens?.find((token) => token.address === id);
+  const { data: token } = useQuery({
+    queryKey: ["token", id],
+    queryFn: () => TokenService.tokenRetrieveTokensTokenIdGet(Number(id), new Date(0).toDateString(), new Date(Date.now()).toDateString(), 1),
+  });
 
   const {balance} = useBalance();
 
@@ -69,10 +75,19 @@ const TiktokinPage: FC = () => {
       tiktokinProgram.programId
     );
 
-    const configAccount = await tiktokinProgram.account.config.fetch(configPda);
-    const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
+    const [curvePda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('bonding-curve'), new PublicKey(token.address).toBuffer()],
+      tiktokinProgram.programId
+    );
 
-    const tx = await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toNumber()), new BN(0), new BN(0))
+    const configAccount = await tiktokinProgram.account.config.fetch(configPda);
+    const curveAccount = await tiktokinProgram.account.bondingCurve.fetch(curvePda);
+
+    const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
+    const tokensAmount = solExchangeToTokenBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(lamportsAmount.toNumber()));
+    console.log(curveAccount.virtualSolReserves.toString(), curveAccount.virtualTokenReserves.toString(), tokensAmount.toString())
+
+    const tx = await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toNumber()), new BN(0), getMinAmountOut(tokensAmount, slippage, configAccount.buyFeePercent))
       .accounts({
         feeRecipient: configAccount.feeRecipient,
         tokenMint: new PublicKey(token.address),
@@ -106,15 +121,9 @@ const TiktokinPage: FC = () => {
         tokenMint: new PublicKey(token.address),
         user: wallet.publicKey,
       })
-      .transaction();
+      .rpc({skipPreflight: true});
 
-    tx.feePayer = wallet.publicKey;
-
-    tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-
-    const signature = await provider?.sendAndConfirm(tx);
-
-    console.log(signature);
+    console.log(tx);
   }
 
   const migrate = async () => {
@@ -132,6 +141,14 @@ const TiktokinPage: FC = () => {
       tiktokinProgram.programId
     );
 
+    const [liquidityPda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("liquidity"),
+        token1Mint.toBuffer()
+      ],
+      tiktokinProgram.programId
+    );
+
     const poolState = getPoolState(ammConfig, token0Mint, token1Mint);
     const lpMint = getLpMint(poolState);
     
@@ -139,7 +156,7 @@ const TiktokinPage: FC = () => {
     const creatorToken1Ata = getAssociatedTokenAddressSync(token1Mint, wallet.publicKey);
     const creatorLpTokenAta = getAssociatedTokenAddressSync(lpMint, wallet.publicKey, false);
 
-    const curveTokenAta = getAssociatedTokenAddressSync(token1Mint, curvePda, true);
+    const liquidityTokenAta = getAssociatedTokenAddressSync(token1Mint, liquidityPda, true);
 
     // const ix = await createAssociatedTokenAccountInstruction(wallet.publicKey, creatorToken0, curvePda, token0Mint);
 
@@ -152,7 +169,7 @@ const TiktokinPage: FC = () => {
     tiktokinProgram?.methods.migrate(new BN(Date.now()))
       .accounts({
         creator: wallet.publicKey,
-        curveTokenAta: curveTokenAta,
+        liquidityTokenAta,
         token0Mint: token0Mint,
         token1Mint: token1Mint,
         creatorToken0: creatorToken0Ata,
@@ -168,6 +185,32 @@ const TiktokinPage: FC = () => {
       });
   }
 
+  const launch = async () => {
+    if (!token || !wallet.publicKey) return;
+
+    const tokenKp = Keypair.generate();
+    const metadataProgramId = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
+    const [metadataPDA] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from('metadata'),
+        metadataProgramId.toBuffer(),
+        tokenKp.publicKey.toBuffer(),
+      ],
+      metadataProgramId
+    );
+
+    const tx = await tiktokinProgram?.methods.launch('token_test', 'TTTT', "https://www.google.com")
+      .accounts({
+        creator: wallet.publicKey,
+        tokenMint: tokenKp.publicKey,
+        tokenMetadataAccount: metadataPDA,
+      })
+      .signers([tokenKp])
+      .rpc({skipPreflight: true});
+
+    console.log(tx);
+  } 
+
   if (!token) {
     return <div className='flex justify-center items-center h-screen bg-[#1A1B1E]'><MoonLoader color='#14F195' size={50} /></div>
   }
@@ -177,6 +220,7 @@ const TiktokinPage: FC = () => {
       <div className="max-w-8xl mx-auto space-y-4">
 
         <button onClick={() => migrate()}>Migrate</button>
+        <button onClick={() => launch()}>Launch</button>
         
         {/* Token Info Header */}
         <div className="bg-[#1A1B1E] border border-[#2A2B2E] rounded-lg p-4">
