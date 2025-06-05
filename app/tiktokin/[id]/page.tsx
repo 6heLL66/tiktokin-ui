@@ -3,7 +3,6 @@
 import { FC, useState } from 'react'
 import {PriceChart} from '@/app/components/PriceChart'
 import { useAnchor } from '@/features/useAnchor'
-import { useTokensList } from '@/features/useTokensList'
 import { MoonLoader } from 'react-spinners'
 import { useParams } from 'next/navigation'
 import { BN } from '@coral-xyz/anchor'
@@ -16,7 +15,7 @@ import { useToken } from '@/features/useToken'
 import { useSlippage } from '@/features/useSlippage'
 import { WalletConnect } from '@/app/solana/WalletProvider/ui'
 import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { getMinAmountOut, solExchangeToTokenBuy } from '@/shared/utils'
+import { getMinAmountOut, solExchangeToTokenBuy, tokenExchangeToSolBuy } from '@/shared/utils'
 import { useQuery } from '@tanstack/react-query'
 import { TokenService } from '@/shared/api/tiktokin.ts'
 
@@ -59,6 +58,13 @@ const TiktokinPage: FC = () => {
     queryFn: () => TokenService.tokenRetrieveTokensTokenIdGet(Number(id), `2022-12-27 08:26:49`, `2025-12-27 08:26:49`, 1),
   });
 
+  const {data: tiktokData} = useQuery({
+    queryKey: ['tiktok', token?.video_url],
+    queryFn: () => {
+        return fetch(`https://www.tiktok.com/oembed/?format=json&url=${token?.video_url}`).then(res => res.json())
+    },
+})
+
   const {balance} = useBalance();
 
   const [amount, setAmount] = useState(0);
@@ -85,9 +91,8 @@ const TiktokinPage: FC = () => {
 
     const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
     const tokensAmount = solExchangeToTokenBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(lamportsAmount.toNumber()));
-    console.log(curveAccount.virtualSolReserves.toString(), curveAccount.virtualTokenReserves.toString(), tokensAmount.toString())
 
-    const tx = await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toNumber()), new BN(0), getMinAmountOut(tokensAmount, slippage, configAccount.buyFeePercent))
+    const tx = await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toNumber()), new BN(0), getMinAmountOut(tokensAmount, new BN(slippage), new BN(configAccount.buyFeePercent)))
       .accounts({
         feeRecipient: configAccount.feeRecipient,
         tokenMint: new PublicKey(token.address),
@@ -112,10 +117,20 @@ const TiktokinPage: FC = () => {
       tiktokinProgram.programId
     );
 
-    const configAccount = await tiktokinProgram.account.config.fetch(configPda);
-    const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
+    const [curvePda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('bonding-curve'), new PublicKey(token.address).toBuffer()],
+      tiktokinProgram.programId
+    );
 
-    const tx = await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toNumber()), new BN(1), new BN(0))
+    const configAccount = await tiktokinProgram.account.config.fetch(configPda);
+    const curveAccount = await tiktokinProgram.account.bondingCurve.fetch(curvePda);
+
+    const tokensAmount = new BigNumber(Math.ceil(amount).toString()).multipliedBy(LAMPORTS_PER_SOL);
+    const lamportsAmount = tokenExchangeToSolBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(tokensAmount.toNumber()));
+
+    console.log(tokensAmount.toString(), getMinAmountOut(new BN(lamportsAmount.toNumber()), new BN(slippage), new BN(configAccount.sellFeePercent)).toString());
+
+    const tx = await tiktokinProgram?.methods.swap(new BN(tokensAmount.toNumber()), new BN(1), getMinAmountOut(new BN(lamportsAmount.toNumber()), new BN(slippage), new BN(configAccount.sellFeePercent)))
       .accounts({
         feeRecipient: configAccount.feeRecipient,
         tokenMint: new PublicKey(token.address),
@@ -133,14 +148,6 @@ const TiktokinPage: FC = () => {
     const token0Mint = NATIVE_MINT;
     const token1Mint = new PublicKey(token.address);
 
-    const [curvePda] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("bonding-curve"),
-        token1Mint.toBuffer()
-      ],
-      tiktokinProgram.programId
-    );
-
     const [liquidityPda] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("liquidity"),
@@ -157,14 +164,6 @@ const TiktokinPage: FC = () => {
     const creatorLpTokenAta = getAssociatedTokenAddressSync(lpMint, wallet.publicKey, false);
 
     const liquidityTokenAta = getAssociatedTokenAddressSync(token1Mint, liquidityPda, true);
-
-    // const ix = await createAssociatedTokenAccountInstruction(wallet.publicKey, creatorToken0, curvePda, token0Mint);
-
-    // const tx = new Transaction().add(ix);
-
-    // const signature = await wallet.sendTransaction(tx, connection);
-
-    // console.log(signature);
 
     tiktokinProgram?.methods.migrate(new BN(Date.now()))
       .accounts({
@@ -216,7 +215,7 @@ const TiktokinPage: FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1011] text-white p-4">
+    <div className="bg-[#0F1011] text-white p-4">
       <div className="max-w-8xl mx-auto space-y-4">
 
         <button onClick={() => migrate()}>Migrate</button>
@@ -249,10 +248,11 @@ const TiktokinPage: FC = () => {
           {/* Main Content */}
           <div className="flex-1 space-y-4">
             {/* Video Player */}
-            <div className="aspect-[9/16] max-w-[300px] mx-auto bg-[#1A1B1E] border border-[#2A2B2E] rounded-lg overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-sm text-[#707070]">TikTok Video Player</span>
-              </div>
+            <div className="relative flex-1 h-[600px] mx-auto bg-[#1A1B1E] border border-[#2A2B2E] rounded-lg overflow-hidden">
+              {tiktokData && <iframe
+                src={`https://www.tiktok.com/player/v1/${tiktokData?.embed_product_id}?fullscreen_button=1&rel=0&autoplay=0`}
+                className="w-full h-full absolute top-0 left-0"
+              ></iframe>}
             </div>
 
             {/* Price Chart */}
@@ -268,28 +268,6 @@ const TiktokinPage: FC = () => {
                 </div>
               </div>
               <PriceChart data={[]} />
-            </div>
-
-            {/* Chat Section */}
-            <div className="bg-[#1A1B1E] border border-[#2A2B2E] rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-bold">Community Chat</h2>
-                <div className="flex items-center gap-1.5 text-xs text-[#707070]">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#14F195]" />
-                  <span>1,234 online</span>
-                </div>
-              </div>
-              <div className="h-[300px] bg-[#0F1011] border border-[#2A2B2E] rounded-md mb-3 p-3" />
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  placeholder="Type your message..." 
-                  className="flex-1 bg-[#0F1011] border border-[#2A2B2E] rounded-md px-3 py-2 text-sm focus:outline-none focus:border-[#9945FF]"
-                />
-                <button className="px-4 py-2 bg-[#9945FF] rounded-md text-sm font-medium hover:bg-[#8935FF]">
-                  Send
-                </button>
-              </div>
             </div>
           </div>
 

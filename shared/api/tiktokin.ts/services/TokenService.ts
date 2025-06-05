@@ -32,6 +32,7 @@ export class TokenService {
     /**
      * Token List
      * @param search
+     * @param orderBy
      * @param limit Page size limit
      * @param offset Page offset
      * @returns Paginated_TokenDto_ Successful Response
@@ -39,6 +40,7 @@ export class TokenService {
      */
     public static tokenListTokensGet(
         search?: (string | null),
+        orderBy?: (string | null),
         limit?: (number | null),
         offset?: number,
     ): CancelablePromise<Paginated_TokenDto_> {
@@ -47,6 +49,7 @@ export class TokenService {
             url: '/tokens',
             query: {
                 'search': search,
+                'order_by': orderBy,
                 'limit': limit,
                 'offset': offset,
             },

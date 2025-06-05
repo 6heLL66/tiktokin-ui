@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Paginated_TokenDto_, TokenService } from "@/shared/api/tiktokin.ts";
-import { useRef, useState } from "react";
+import { Paginated_TokenDto_, TokenDto, TokenService } from "@/shared/api/tiktokin.ts";
+import { useEffect, useRef, useState } from "react";
 
 const LIMIT = 40
+let eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/stream`);
 
 export const useTokensList = () => {
     const [searchTerm, setSearnTerm] = useState("");
@@ -14,18 +15,33 @@ export const useTokensList = () => {
     const tokensListQuery = useQuery({
         queryKey: ["tokens", searchTerm],
         queryFn: async () => {
-            const res = await TokenService.tokenListTokensGet(searchTerm, LIMIT)
+            const res = await TokenService.tokenListTokensGet(searchTerm ?? null, '-id', LIMIT)
             setTokens(res.items)
             return res
         },
     });
+
+    useEffect(() => {
+        eventSource.addEventListener('new_token', (event) => {
+            const data = JSON.parse(event.data) as TokenDto;
+
+            setTokens((prev) => [data, ...prev])
+        });
+
+        eventSource.onerror = () => {
+            console.log('Connection error, reconnecting...');
+            setTimeout(() => {
+                eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/stream`);
+            }, 1000);
+        };
+    }, [])
 
     const loadMore = async () => {
         if (flag.current) return;
         try {
             flag.current = true;
             setIsLoading(true);
-            const res = await TokenService.tokenListTokensGet(searchTerm, LIMIT, tokens.length)
+            const res = await TokenService.tokenListTokensGet(searchTerm ?? null, '-id', LIMIT, tokens.length)
             setTokens([...tokens, ...res.items])
             setIsLoading(false);
             flag.current = false;

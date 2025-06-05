@@ -9,6 +9,7 @@ export type TokenRetrieveDto = {
     symbol: string;
     uri: string;
     address: string;
+    video_url?: (string | null);
     snapshots: Array<TokenSnapshotDto>;
 };
 

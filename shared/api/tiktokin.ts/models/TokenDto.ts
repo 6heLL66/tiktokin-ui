@@ -8,6 +8,7 @@ export type TokenDto = {
     symbol: string;
     uri: string;
     address: string;
+    price: string;
     video_url?: (string | null);
 };
 
