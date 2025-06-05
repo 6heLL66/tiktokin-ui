@@ -56,7 +56,7 @@ const TiktokinPage: FC = () => {
   const {slippage} = useSlippage();
   const { data: token } = useQuery({
     queryKey: ["token", id],
-    queryFn: () => TokenService.tokenRetrieveTokensTokenIdGet(Number(id), new Date(0).toDateString(), new Date(Date.now()).toDateString(), 1),
+    queryFn: () => TokenService.tokenRetrieveTokensTokenIdGet(Number(id), `2022-12-27 08:26:49`, `2025-12-27 08:26:49`, 1),
   });
 
   const {balance} = useBalance();
