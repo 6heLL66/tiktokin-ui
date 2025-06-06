@@ -3,7 +3,6 @@ import { Paginated_TokenDto_, TokenDto, TokenService } from "@/shared/api/tiktok
 import { useEffect, useRef, useState } from "react";
 
 const LIMIT = 40
-let eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/stream`);
 
 export const useTokensList = () => {
     const [searchTerm, setSearnTerm] = useState("");
@@ -22,6 +21,8 @@ export const useTokensList = () => {
     });
 
     useEffect(() => {
+        let eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/stream`);
+        
         eventSource.addEventListener('new_token', (event) => {
             const data = JSON.parse(event.data) as TokenDto;
 

@@ -18,6 +18,7 @@ import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@s
 import { getMinAmountOut, solExchangeToTokenBuy, tokenExchangeToSolBuy } from '@/shared/utils'
 import { useQuery } from '@tanstack/react-query'
 import { TokenService } from '@/shared/api/tiktokin.ts'
+import { Time } from 'lightweight-charts'
 
 const CP_SWAP_PROGRAM_ID = new PublicKey('CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW');
 
@@ -267,7 +268,7 @@ const TiktokinPage: FC = () => {
                   ))}
                 </div>
               </div>
-              <PriceChart data={[]} />
+              <PriceChart data={token.snapshots.map(p => ({...p, open: Number(p.open), close: Number(p.close), high: Number(p.high), low: Number(p.low), time: p.created_at as Time}))} />
             </div>
           </div>
 
