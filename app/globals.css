@@ -31,3 +31,7 @@ input[type="number"] {
 img, iframe {
   transition: opacity 0.5s ease;
 }
+
+button {
+  cursor: pointer;
+}
