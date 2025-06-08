@@ -1,25 +1,65 @@
 'use client'
 
-import { createChart, CandlestickSeries, ColorType, CandlestickData } from 'lightweight-charts';
+import { formatValue } from '@/shared/utils';
+import { createChart, CandlestickSeries, ColorType, CandlestickData, DeepPartial, ChartOptions } from 'lightweight-charts';
 import { useEffect, useRef } from 'react';
 
 interface PriceChartProps {
   data: CandlestickData[];
+  isCap?: boolean;
 }
 
-export function PriceChart({ data }: PriceChartProps) {
+export function PriceChart({ data, isCap }: PriceChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    const chartOptions = {
+    const chartOptions: DeepPartial<ChartOptions> = {
       layout: {
         textColor: 'rgba(255, 255, 255, 0.8)',
         background: { 
           type: ColorType.Solid, 
           color: 'transparent' 
         }
+      },
+      localization: {
+        priceFormatter: (price: number) => {
+          if (isCap) {
+            return formatValue(price, '$0,00');
+          }
+          if (price < 0.001) {
+            const priceStr = price.toString();
+            const match = priceStr.match(/^0\.0*(\d+)/);
+            if (match) {
+              const afterDecimal = priceStr.split('.')[1];
+              const leadingZeros = afterDecimal.match(/^0*/)?.[0].length || 0;
+              
+              if (leadingZeros > 15) {
+                return `$${price.toExponential(2)}`;
+              }
+              
+              const significantDigits = afterDecimal.substring(leadingZeros).substring(0, 3);
+              
+              const subscriptMap: { [key: string]: string } = {
+                '0': '0', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
+                '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉'
+              };
+              
+              const subscriptZeros = leadingZeros.toString()
+                .split('')
+                .map(digit => subscriptMap[digit])
+                .join('');
+              
+              return `$0.0₍${subscriptZeros}₎${significantDigits}`;
+            }
+            return `$${price.toFixed(8).replace(/\.?0+$/, '')}`;
+          }
+          if (price < 0.01) {
+            return `$${price.toFixed(6).replace(/\.?0+$/, '')}`;
+          }
+          return `$${price.toString()}`;
+        },
       },
       grid: {
         vertLines: {
@@ -45,7 +85,7 @@ export function PriceChart({ data }: PriceChartProps) {
       timeScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         timeVisible: true,
-        secondsVisible: false,
+        secondsVisible: true,
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -54,7 +94,6 @@ export function PriceChart({ data }: PriceChartProps) {
       width: chartContainerRef.current.clientWidth
     };
 
-    // @ts-expect-error
     const chart = createChart(chartContainerRef.current, chartOptions);
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
       upColor: '#22c55e',

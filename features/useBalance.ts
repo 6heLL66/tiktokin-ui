@@ -16,7 +16,6 @@ export const useBalance = () => {
       return
     };
     const balance = await connection.getBalance(publicKey);
-    console.log(balance);
     
     const balanceBN = new BigNumber(balance).div(new BigNumber(LAMPORTS_PER_SOL));
     

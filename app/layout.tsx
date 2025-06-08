@@ -32,7 +32,7 @@ export default function RootLayout({
         <Providers>
           <div className="flex">
             <Sidebar />
-            <div className="flex-1 ml-72">
+            <div className="flex-1 lg:ml-72">
               <Header />
               <main className="mt-16">
                 {children}

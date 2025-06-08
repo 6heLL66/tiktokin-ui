@@ -1,6 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
-import BigNumber from "bignumber.js";
+import numeral from "numeral";
+import { TokenSnapshotDto } from "./api/tiktokin.ts/models/TokenSnapshotDto";
 
 export const solExchangeToTokenBuy = (solReserve: BN, tokenReserve: BN, amount: BN) => {
     console.log(amount.toString(), solReserve.toString(), tokenReserve.toString())
@@ -22,3 +22,53 @@ export const getMinAmountOut = (amount: BN, slippage: BN, fee: BN) => {
     
     return minAmountOut;
 }
+
+export const formatValue = (value: number, format: string = '0,0.00') => {
+    if (value >= 1000000) {
+      return `${numeral(value / 1000000).format(format)}M`;
+    } else if (value >= 1000) {
+      return `${numeral(value / 1000).format(format)}K`;
+    }
+    return `${numeral(value).format(format)}`;
+  };
+
+export const groupSnapshotsByInterval = (
+  snapshots: { price: number; created_at: string }[],
+  interval: number
+): TokenSnapshotDto[] => {
+  if (snapshots.length === 0) return [];
+
+  const sortedSnapshots = [...snapshots].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+
+  const groups: { [key: number]: { price: number; created_at: string }[] } = {};
+
+  sortedSnapshots.forEach((snapshot) => {
+    const timestamp = new Date(snapshot.created_at).getTime();
+    const intervalKey = Math.floor(timestamp / (interval * 1000)) * (interval * 1000);
+    
+    if (!groups[intervalKey]) {
+      groups[intervalKey] = [];
+    }
+    groups[intervalKey].push(snapshot);
+  });
+
+  return Object.entries(groups).map(([intervalKey, groupSnapshots]) => {
+    const prices = groupSnapshots.map(s => s.price);
+    const open = groupSnapshots[0].price;
+    const close = groupSnapshots[groupSnapshots.length - 1].price;
+    const high = Math.max(...prices);
+    const low = Math.min(...prices);
+    const created_at = new Date(parseInt(intervalKey)).toISOString();
+
+    return {
+      open: open.toString(),
+      close: close.toString(),
+      high: high.toString(),
+      low: low.toString(),
+      created_at,
+    };
+  }).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+};
+

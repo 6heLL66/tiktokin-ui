@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
+import { getAssociatedTokenAddressSync } from '@solana/spl-token'
 
 export interface TokenInfo {
   decimals: number
@@ -15,44 +16,44 @@ export const useToken = (mintAddress?: string) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchTokenInfo = async () => {
-      if (!mintAddress || !publicKey) {
-        setIsLoading(false)
-        return
-      }
-
-      try {
-        setIsLoading(true)
-        setError(null)
-
-        const mint = new PublicKey(mintAddress)
-        
-        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-          publicKey,
-          { mint }
-        )
-
-        const balance = tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0
-
-        const mintInfo = await connection.getParsedAccountInfo(mint)
-        const decimals = (mintInfo.value?.data as any)?.parsed?.info?.decimals || 0
-        
-        setTokenInfo({
-          decimals,
-          balance,
-          address: mintAddress
-        })
-
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch token info')
-      } finally {
-        setIsLoading(false)
-      }
+  const fetchTokenInfo = async () => {
+    if (!mintAddress || !publicKey) {
+      setIsLoading(false)
+      return
     }
 
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const mint = new PublicKey(mintAddress)
+      
+      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+        publicKey,
+        { mint }
+      )
+
+      const balance = tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0
+
+      const mintInfo = await connection.getParsedAccountInfo(mint)
+      const decimals = (mintInfo.value?.data as any)?.parsed?.info?.decimals || 0
+      
+      setTokenInfo({
+        decimals,
+        balance,
+        address: mintAddress
+      })
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch token info')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchTokenInfo()
   }, [connection, mintAddress, publicKey])
 
-  return { tokenInfo, isLoading, error }
+  return { tokenInfo, isLoading, error, fetchTokenInfo }
 }
