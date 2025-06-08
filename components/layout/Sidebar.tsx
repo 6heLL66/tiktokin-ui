@@ -1,10 +1,12 @@
 'use client'
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { IconHome, IconCoin, IconBrandDiscord, IconBrandTwitter, IconBrandTiktok, IconInfoCircle, IconQuestionMark, IconMenu2, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -45,7 +47,7 @@ export default function Sidebar() {
               <span className="text-2xl lg:text-2xl font-bold text-zinc-100">
                 TikTokIn
               </span>
-              <span className="text-xs text-zinc-500">Web3 Social Platform</span>
+              <span className="text-xs text-zinc-500">Create. Earn. Repeat.</span>
             </div>
           </div>
           
@@ -55,21 +57,33 @@ export default function Sidebar() {
               { href: "/token", icon: IconCoin, label: "TikTokIn Token" },
               { href: "/what-is-tiktokin", icon: IconQuestionMark, label: "What is Tiktokin?" },
               { href: "/how-to-create", icon: IconInfoCircle, label: "How to create " },
-            ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-4 md:gap-0 lg:gap-4 px-4 md:px-2 lg:px-4 py-3.5 md:py-4 lg:py-3.5 text-zinc-400 hover:text-zinc-100 rounded-xl transition-all duration-200 group hover:bg-white/[0.02] relative md:justify-center lg:justify-start"
-              >
-                <item.icon 
-                  size={22} 
-                  className="group-hover:scale-110 transition-transform duration-200 group-hover:text-zinc-200 md:mx-auto lg:mx-0" 
-                  stroke={1.5}
-                />
-                <span className="font-medium tracking-wide md:hidden lg:inline">{item.label}</span>
-              </Link>
-            ))}
+            ].map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  scroll={false}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-4 md:gap-0 lg:gap-4 px-4 md:px-2 lg:px-4 py-3.5 md:py-4 lg:py-3.5 rounded-xl transition-all duration-200 group relative md:justify-center lg:justify-start ${
+                    isActive 
+                      ? 'text-white bg-gradient-to-r from-violet-500/20 to-purple-500/20 border border-violet-500/30 shadow-lg shadow-violet-500/10' 
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.02]'
+                  }`}
+                >
+                  <item.icon 
+                    size={22} 
+                    className={`group-hover:scale-110 transition-transform duration-200 md:mx-auto lg:mx-0 ${
+                      isActive ? 'text-violet-400' : 'group-hover:text-zinc-200'
+                    }`}
+                    stroke={1.5}
+                  />
+                  <span className={`font-medium tracking-wide md:hidden lg:inline ${
+                    isActive ? 'text-white' : ''
+                  }`}>{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
