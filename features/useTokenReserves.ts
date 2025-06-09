@@ -77,7 +77,7 @@ export const useTokenReserves = (tokenAddress?: string) => {
       price: new BigNumber(price).dividedBy(solPrice).toNumber(),
       created_at: new Date().toISOString()
     }])
-  }, [price])
+  }, [reserves])
 
   useEffect(() => {
     if (!tokenAddress) return;

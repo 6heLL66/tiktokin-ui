@@ -104,7 +104,7 @@ export function TokensList() {
           ))}
         </section>}
 
-        <div ref={markerRef} className="opacity-0 h-1">marker</div>
+        {tokens && !query.isFetching && <div ref={markerRef} className="opacity-0 h-1">marker</div>}
 
         {(query.isFetching || isLoading) && <div className="flex justify-center items-center mt-16 sm:mt-24 w-full pb-8"><PropagateLoader color='white' size={8} /></div>}
       </main>

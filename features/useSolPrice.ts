@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 async function getSolanaPrice() {
   try {
@@ -18,13 +18,8 @@ export const useSolPrice = () => {
   const query = useQuery({
     queryKey: ["solPrice"],
     queryFn: getSolanaPrice,
+    refetchInterval: 60000,
   });
-
-  useEffect(() => {
-    if (query.data) {
-      setInterval(query.refetch, 60000);
-    }
-  }, []);
 
   return {
     query,

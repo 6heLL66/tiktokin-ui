@@ -24,6 +24,7 @@ import { useTokenReserves } from '@/features/useTokenReserves'
 import numeral from 'numeral'
 import { intervals } from './constants'
 import { useChartSettings } from '@/features/useChartInterval'
+import { useConfig } from '@/features/useConfig'
 
 const CP_SWAP_PROGRAM_ID = new PublicKey('CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW');
 
@@ -77,6 +78,7 @@ const TiktokinPage: FC = () => {
 })
 
   const {balance, updateBalance} = useBalance();
+  const {config, curveLimit} = useConfig();
 
   const [amount, setAmount] = useState(0);
   const [isSlippageModalOpen, setIsSlippageModalOpen] = useState(false)
@@ -86,80 +88,69 @@ const TiktokinPage: FC = () => {
   const { marketCap, chartRealTimeData, reserves } = useTokenReserves(token?.address);
 
   const handleBuy = async() => {
-    if (!token || Number.isNaN(amount) || !wallet.publicKey) return;
+    if (!token || Number.isNaN(amount) || !wallet.publicKey || !config?.feeRecipient) return;
 
     setLoading(true)
 
     try {
-      const [configPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('global-config')],
+      const [curvePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from('bonding-curve'), new PublicKey(token.address).toBuffer()],
         tiktokinProgram.programId
       );
 
-    const [curvePda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('bonding-curve'), new PublicKey(token.address).toBuffer()],
-      tiktokinProgram.programId
-    );
+      const curveAccount = await tiktokinProgram.account.bondingCurve.fetch(curvePda);
 
-    const configAccount = await tiktokinProgram.account.config.fetch(configPda);
-    const curveAccount = await tiktokinProgram.account.bondingCurve.fetch(curvePda);
+      const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
+      const tokensAmount = solExchangeToTokenBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(lamportsAmount.toString()));
 
-    const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
-    const tokensAmount = solExchangeToTokenBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(lamportsAmount.toString()));
+      await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toString()), new BN(0), getMinAmountOut(tokensAmount, new BN(slippage), new BN(config.buyFeePercent)))
+        .accounts({
+          feeRecipient: config?.feeRecipient!,
+          tokenMint: new PublicKey(token.address),
+          user: wallet.publicKey,
+        })
+        .rpc()
+        .finally(() => {
+          setLoading(false)
+        });
 
-    await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toString()), new BN(0), getMinAmountOut(tokensAmount, new BN(slippage), new BN(configAccount.buyFeePercent)))
-      .accounts({
-        feeRecipient: configAccount.feeRecipient,
-        tokenMint: new PublicKey(token.address),
-        user: wallet.publicKey,
-      })
-      .rpc()
-      .finally(() => {
-        setLoading(false)
-      });
-
-    updateBalance()
-    fetchTokenInfo()
+      updateBalance()
+      fetchTokenInfo()
     } catch (error) {
+      console.log(error)
       setLoading(false)
     }
   }
 
   const handleSell = async() => {
-    if (!token || Number.isNaN(amount) || !wallet.publicKey) return;
+    if (!token || Number.isNaN(amount) || !wallet.publicKey || !config?.feeRecipient) return;
 
     setLoading(true)
 
     try {
-      const [configPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from('global-config')],
+      const [curvePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from('bonding-curve'), new PublicKey(token.address).toBuffer()],
         tiktokinProgram.programId
       );
 
-    const [curvePda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('bonding-curve'), new PublicKey(token.address).toBuffer()],
-      tiktokinProgram.programId
-    );
+      const curveAccount = await tiktokinProgram.account.bondingCurve.fetch(curvePda);
 
-    const configAccount = await tiktokinProgram.account.config.fetch(configPda);
-    const curveAccount = await tiktokinProgram.account.bondingCurve.fetch(curvePda);
+      const tokensAmount = new BigNumber(Math.ceil(amount).toString()).multipliedBy(LAMPORTS_PER_SOL);
+      const lamportsAmount = tokenExchangeToSolBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(tokensAmount.toString()));
 
-    const tokensAmount = new BigNumber(Math.ceil(amount).toString()).multipliedBy(LAMPORTS_PER_SOL);
-    const lamportsAmount = tokenExchangeToSolBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(tokensAmount.toString()));
+      await tiktokinProgram?.methods.swap(new BN(tokensAmount.toString()), new BN(1), getMinAmountOut(new BN(lamportsAmount.toString()), new BN(slippage), new BN(config.sellFeePercent)))
+        .accounts({
+          feeRecipient: config?.feeRecipient,
+          tokenMint: new PublicKey(token.address),
+          user: wallet.publicKey,
+        })
+        .rpc()
+        .finally(() => {
+          setLoading(false)
+        });
 
-    await tiktokinProgram?.methods.swap(new BN(tokensAmount.toString()), new BN(1), getMinAmountOut(new BN(lamportsAmount.toString()), new BN(slippage), new BN(configAccount.sellFeePercent)))
-      .accounts({
-        feeRecipient: configAccount.feeRecipient,
-        tokenMint: new PublicKey(token.address),
-        user: wallet.publicKey,
-      })
-      .rpc()
-      .finally(() => {
-        setLoading(false)
-      });
-
-    updateBalance()
-    fetchTokenInfo()
+      updateBalance()
+      fetchTokenInfo()
     } catch (error) {
       console.log(error)
       setLoading(false)
@@ -262,6 +253,9 @@ const TiktokinPage: FC = () => {
   if (!token) {
     return <div className='flex justify-center items-center h-screen bg-[#1A1B1E]'><MoonLoader color='#14F195' size={50} /></div>
   }
+
+  const progressPercentage = Math.min((marketCap / curveLimit.multipliedBy(solPrice).toNumber()) * 100, 100);
+  const isReadyForMigration = marketCap >= curveLimit.multipliedBy(solPrice).toNumber() && curveLimit.toNumber() > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F1011] to-[#1A1B1E] text-white">
@@ -507,7 +501,7 @@ const TiktokinPage: FC = () => {
                   {wallet.publicKey ? (
                     <button 
                       onClick={activeTab === 'buy' ? handleBuy : handleSell}
-                      disabled={loading}
+                      disabled={loading || isReadyForMigration}
                       className={`w-full py-4 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                         activeTab === 'buy'
                           ? 'bg-gradient-to-r from-[#14F195] to-[#13E085] text-black hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'
@@ -528,6 +522,50 @@ const TiktokinPage: FC = () => {
                       <WalletConnect />
                     </div>
                   )}
+
+                  <div className="bg-[#0F1011]/60 border border-[#2A2B2E]/40 rounded-xl p-4 space-y-4 mt-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-white">Raydium Migration</h3>
+                      <span className="text-xs text-[#9CA3AF]">
+                        ${numeral(marketCap).format('0,0')} / ${numeral(curveLimit.multipliedBy(solPrice).toNumber()).format('0,0')}
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="w-full bg-[#1A1B1E]/80 rounded-full h-3 overflow-hidden border border-[#2A2B2E]/40">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-500 ease-out ${
+                            isReadyForMigration 
+                              ? 'bg-gradient-to-r from-[#14F195] to-[#13E085]' 
+                              : 'bg-gradient-to-r from-[#3B82F6] to-[#1D4ED8]'
+                          }`}
+                          style={{ width: `${progressPercentage}%` }}
+                        >
+                          <div className="h-full bg-gradient-to-r from-white/20 to-transparent rounded-full"></div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#9CA3AF]">
+                          {progressPercentage.toFixed(1)}% complete
+                        </span>
+                        <span className={`font-medium ${
+                          isReadyForMigration ? 'text-[#14F195]' : 'text-[#3B82F6]'
+                        }`}>
+                          {isReadyForMigration ? 'Completed!' : 'In Progress'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {isReadyForMigration && (
+                      <button 
+                        onClick={migrate}
+                        className="w-full py-3 bg-gradient-to-r from-[#14F195] to-[#13E085] text-black rounded-xl text-sm font-semibold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                      >
+                        Migrate to Raydium
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

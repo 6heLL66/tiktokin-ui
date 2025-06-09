@@ -40,6 +40,7 @@ export const useTokensList = () => {
       setTokens(res.items);
       return res;
     },
+    staleTime: 0,
   });
 
   useEffect(() => {
@@ -65,6 +66,7 @@ export const useTokensList = () => {
 
   const loadMore = async () => {
     if (flag.current) return;
+    alert('asd')
     try {
       flag.current = true;
       setIsLoading(true);

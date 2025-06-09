@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/pump.json`.
  */
 export type Tiktokin = {
-  "address": "B9vVYVUQTkqftrYzmvj36GpraotLseR6UPz59gUktQQF",
+  "address": "DveezyD6efYCAmGa5SUAZiLaVFZZvxazKFs4yVzwydqB",
   "metadata": {
     "name": "pump",
     "version": "0.1.0",
@@ -1096,6 +1096,16 @@ export type Tiktokin = {
       "code": 6006,
       "name": "invalidCpSwapProgram",
       "msg": "Invalid CP Swap program"
+    },
+    {
+      "code": 6007,
+      "name": "curveNotCompleted",
+      "msg": "Curve is not completed"
+    },
+    {
+      "code": 6008,
+      "name": "curveCompleted",
+      "msg": "Curve is completed"
     }
   ],
   "types": [
@@ -1213,6 +1223,10 @@ export type Tiktokin = {
           {
             "name": "isCompleted",
             "type": "bool"
+          },
+          {
+            "name": "feesCollected",
+            "type": "u64"
           }
         ]
       }

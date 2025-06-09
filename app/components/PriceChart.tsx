@@ -26,8 +26,21 @@ export function PriceChart({ data, isCap }: PriceChartProps) {
       localization: {
         priceFormatter: (price: number) => {
           if (isCap) {
-            return formatValue(price, '$0,00');
+            if (price >= 1e12) {
+              return `$${(price / 1e12).toFixed(1)}T`;
+            }
+            if (price >= 1e9) {
+              return `$${(price / 1e9).toFixed(1)}B`;
+            }
+            if (price >= 1e6) {
+              return `$${(price / 1e6).toFixed(1)}M`;
+            }
+            if (price >= 1e3) {
+              return `$${(price / 1e3).toFixed(1)}K`;
+            }
+            return `$${price.toFixed(0)}`;
           }
+          
           if (price < 0.001) {
             const priceStr = price.toString();
             const match = priceStr.match(/^0\.0*(\d+)/);
@@ -58,7 +71,7 @@ export function PriceChart({ data, isCap }: PriceChartProps) {
           if (price < 0.01) {
             return `$${price.toFixed(6).replace(/\.?0+$/, '')}`;
           }
-          return `$${price.toString()}`;
+          return `$${price.toFixed(2)}`;
         },
       },
       grid: {
@@ -67,6 +80,7 @@ export function PriceChart({ data, isCap }: PriceChartProps) {
         },
         horzLines: {
           color: 'rgba(255, 255, 255, 0.05)',
+          visible: true,
         },
       },
       crosshair: {
@@ -89,6 +103,7 @@ export function PriceChart({ data, isCap }: PriceChartProps) {
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
+        autoScale: false,
       },
       height: 400,
       width: chartContainerRef.current.clientWidth
@@ -100,10 +115,18 @@ export function PriceChart({ data, isCap }: PriceChartProps) {
       downColor: '#ef4444',
       borderVisible: false,
       wickUpColor: '#22c55e',
-      wickDownColor: '#ef4444'
+      wickDownColor: '#ef4444',
+      priceFormat: {
+        type: 'price',
+        minMove: isCap ? 1 : 0.000000001,
+        precision: isCap ? 0 : 8,
+      },
     });
 
     candlestickSeries.setData(data);
+
+    console.log(data);
+    
     chart.timeScale().fitContent();
 
     const handleResize = () => {
