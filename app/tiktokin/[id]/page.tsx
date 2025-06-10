@@ -7,14 +7,14 @@ import { ClipLoader, MoonLoader } from 'react-spinners'
 import { useParams } from 'next/navigation'
 import { BN } from '@coral-xyz/anchor'
 import BigNumber from "bignumber.js";
-import { Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import { ComputeBudgetProgram, Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useBalance } from '@/features/useBalance'
 import { SlippageModal } from '@/app/components/SlippageModal'
 import { useToken } from '@/features/useToken'
 import { useSlippage } from '@/features/useSlippage'
 import { WalletConnect } from '@/app/solana/WalletProvider/ui'
-import { getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { ASSOCIATED_TOKEN_PROGRAM_ID, closeAccount, createAssociatedTokenAccountInstruction, createCloseAccountInstruction, getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { formatValue, getMinAmountOut, solExchangeToTokenBuy, tokenExchangeToSolBuy } from '@/shared/utils'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { TokenService } from '@/shared/api/tiktokin.ts'
@@ -138,12 +138,16 @@ const TiktokinPage: FC = () => {
       const tokensAmount = new BigNumber(Math.ceil(amount).toString()).multipliedBy(LAMPORTS_PER_SOL);
       const lamportsAmount = tokenExchangeToSolBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(tokensAmount.toString()));
 
+      const userWsolAta = getAssociatedTokenAddressSync(NATIVE_MINT, wallet.publicKey);
+      const unwrapSolIx = createCloseAccountInstruction(userWsolAta, wallet.publicKey, wallet.publicKey);
+
       await tiktokinProgram?.methods.swap(new BN(tokensAmount.toString()), new BN(1), getMinAmountOut(new BN(lamportsAmount.toString()), new BN(slippage), new BN(config.sellFeePercent)))
         .accounts({
           feeRecipient: config?.feeRecipient,
           tokenMint: new PublicKey(token.address),
           user: wallet.publicKey,
         })
+        .postInstructions([unwrapSolIx])
         .rpc()
         .finally(() => {
           setLoading(false)
@@ -194,6 +198,7 @@ const TiktokinPage: FC = () => {
         token0Program: TOKEN_PROGRAM_ID,
         ammConfig: ammConfig,
       })
+      .preInstructions([ComputeBudgetProgram.setComputeUnitLimit({ units: 250_000 })])
       .rpc({skipPreflight: true}).catch((err) => {
         console.log(err);
       });
@@ -501,7 +506,7 @@ const TiktokinPage: FC = () => {
                   {wallet.publicKey ? (
                     <button 
                       onClick={activeTab === 'buy' ? handleBuy : handleSell}
-                      disabled={loading || isReadyForMigration}
+                      disabled={loading}
                       className={`w-full py-4 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                         activeTab === 'buy'
                           ? 'bg-gradient-to-r from-[#14F195] to-[#13E085] text-black hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'

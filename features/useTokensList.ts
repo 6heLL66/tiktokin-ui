@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   Paginated_TokenDto_,
-  TokenDto,
   TokenService,
 } from "@/shared/api/tiktokin.ts";
 import { useEffect, useRef, useState } from "react";
@@ -40,29 +39,7 @@ export const useTokensList = () => {
       setTokens(res.items);
       return res;
     },
-    staleTime: 0,
   });
-
-  useEffect(() => {
-    let eventSource = new EventSource(
-      `${process.env.NEXT_PUBLIC_API_URL}/stream`
-    );
-
-    eventSource.addEventListener("new_token", (event) => {
-      const data = JSON.parse(event.data) as TokenDto;
-
-      setTokens((prev) => [data, ...prev]);
-    });
-
-    eventSource.onerror = () => {
-      console.log("Connection error, reconnecting...");
-      setTimeout(() => {
-        eventSource = new EventSource(
-          `${process.env.NEXT_PUBLIC_API_URL}/stream`
-        );
-      }, 1000);
-    };
-  }, []);
 
   const loadMore = async () => {
     if (flag.current) return;
