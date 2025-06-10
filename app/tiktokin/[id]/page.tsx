@@ -571,14 +571,14 @@ const TiktokinPage: FC = () => {
                       </div>
                     </div>
 
-                    {isReadyForMigration && (
+                    {/* {isReadyForMigration && (
                       <button 
                         onClick={migrate}
                         className="w-full py-3 bg-gradient-to-r from-[#14F195] to-[#13E085] text-black rounded-xl text-sm font-semibold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                       >
                         Migrate to Raydium
                       </button>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </div>
