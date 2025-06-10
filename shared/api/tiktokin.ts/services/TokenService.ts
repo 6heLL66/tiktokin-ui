@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Paginated_TokenDto_ } from '../models/Paginated_TokenDto_';
+import type { Paginated_TokenWithPriceDto_ } from '../models/Paginated_TokenWithPriceDto_';
 import type { TokenCreateRequestDto } from '../models/TokenCreateRequestDto';
 import type { TokenDto } from '../models/TokenDto';
 import type { TokenRetrieveDto } from '../models/TokenRetrieveDto';
@@ -35,7 +35,7 @@ export class TokenService {
      * @param orderBy
      * @param limit Page size limit
      * @param offset Page offset
-     * @returns Paginated_TokenDto_ Successful Response
+     * @returns Paginated_TokenWithPriceDto_ Successful Response
      * @throws ApiError
      */
     public static tokenListTokensGet(
@@ -43,7 +43,7 @@ export class TokenService {
         orderBy?: (string | null),
         limit?: (number | null),
         offset?: number,
-    ): CancelablePromise<Paginated_TokenDto_> {
+    ): CancelablePromise<Paginated_TokenWithPriceDto_> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/tokens',
@@ -83,6 +83,40 @@ export class TokenService {
                 'from_datetime': fromDatetime,
                 'to_datetime': toDatetime,
                 'interval': interval,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Users Tokens
+     * @param authorization
+     * @param search
+     * @param orderBy
+     * @param limit Page size limit
+     * @param offset Page offset
+     * @returns Paginated_TokenWithPriceDto_ Successful Response
+     * @throws ApiError
+     */
+    public static usersTokensUsersMeTokensGet(
+        authorization: string,
+        search?: (string | null),
+        orderBy?: (string | null),
+        limit?: (number | null),
+        offset?: number,
+    ): CancelablePromise<Paginated_TokenWithPriceDto_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/users/me/tokens',
+            headers: {
+                'authorization': authorization,
+            },
+            query: {
+                'search': search,
+                'order_by': orderBy,
+                'limit': limit,
+                'offset': offset,
             },
             errors: {
                 422: `Validation Error`,

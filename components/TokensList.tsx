@@ -7,7 +7,7 @@ import { debounce } from "lodash";
 
 export function TokensList() {
     const markerRef = useRef<HTMLDivElement>(null);
-    const { query, tokens, isLoading, sortBy, setSortBy, loadMore, setSearnTerm } = useTokensList();;
+    const { query, tokens, isLoading, sortBy, curveAccounts, setSortBy, loadMore, setSearnTerm } = useTokensList();;
 
     const [searchInput, setSearchInput] = useState("");
 
@@ -42,6 +42,8 @@ export function TokensList() {
           window.removeEventListener('scroll', handler);
         }
     }, [tokens, query, markerRef]);
+
+    console.log(tokens)
 
     return (
         <main className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
@@ -100,7 +102,7 @@ export function TokensList() {
 
         {tokens && !query.isFetching && <section className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 px-4 sm:px-0 w-full">
           {tokens.map((token, i) => (
-            <TokenCard key={token.address} token={token} index={i} />
+            <TokenCard key={token.address} token={token} index={i} curveAccount={curveAccounts[token.id]} />
           ))}
         </section>}
 

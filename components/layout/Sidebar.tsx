@@ -1,7 +1,7 @@
 'use client'
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconHome, IconCoin, IconBrandDiscord, IconBrandTwitter, IconBrandTiktok, IconInfoCircle, IconQuestionMark, IconMenu2, IconX } from "@tabler/icons-react";
+import { IconHome, IconCoin, IconBrandTwitter, IconBrandTiktok, IconInfoCircle, IconQuestionMark, IconMenu2, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 
 export default function Sidebar() {
@@ -54,7 +54,7 @@ export default function Sidebar() {
           <nav className="space-y-1.5">
             {[
               { href: "/", icon: IconHome, label: "TikTokins" },
-              { href: "/token", icon: IconCoin, label: "TikTokIn Token" },
+              { href: "/tiktokin/11111111", icon: IconCoin, label: "TikTokIn Token" },
               { href: "/what-is-tiktokin", icon: IconQuestionMark, label: "What is Tiktokin?" },
               { href: "/how-to-create", icon: IconInfoCircle, label: "How to create " },
             ].map((item) => {
@@ -64,6 +64,7 @@ export default function Sidebar() {
                   key={item.href}
                   href={item.href}
                   scroll={false}
+                  replace={true}
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-4 md:gap-0 lg:gap-4 px-4 md:px-2 lg:px-4 py-3.5 md:py-4 lg:py-3.5 rounded-xl transition-all duration-200 group relative md:justify-center lg:justify-start ${
                     isActive 
@@ -90,9 +91,8 @@ export default function Sidebar() {
         <div className="mt-auto p-6 md:p-4 border-t border-zinc-800/50 bg-gradient-to-b from-transparent to-white/[0.02]">
           <div className="flex items-center justify-center gap-8 md:gap-4 lg:gap-8 md:flex-col lg:flex-row">
             {[
-              { href: "https://discord.gg/tiktokin", icon: IconBrandDiscord },
-              { href: "https://twitter.com/tiktokin", icon: IconBrandTwitter },
-              { href: "https://tiktok.com/@tiktokin", icon: IconBrandTiktok },
+              { href: "https://x.com/Tiktokinsol", icon: IconBrandTwitter },
+              { href: "https://tiktok.com/@tiktokinsol", icon: IconBrandTiktok },
             ].map((social) => (
               <a
                 key={social.href}

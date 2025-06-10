@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TokenDto } from './TokenDto';
-export type Paginated_TokenDto_ = {
-    items: Array<TokenDto>;
+import type { TokenWithPriceDto } from './TokenWithPriceDto';
+export type Paginated_TokenWithPriceDto_ = {
+    items: Array<TokenWithPriceDto>;
     total: (number | null);
     limit: (number | null);
     offset: (number | null);

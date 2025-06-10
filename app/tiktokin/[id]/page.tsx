@@ -14,7 +14,7 @@ import { SlippageModal } from '@/app/components/SlippageModal'
 import { useToken } from '@/features/useToken'
 import { useSlippage } from '@/features/useSlippage'
 import { WalletConnect } from '@/app/solana/WalletProvider/ui'
-import { ASSOCIATED_TOKEN_PROGRAM_ID, closeAccount, createAssociatedTokenAccountInstruction, createCloseAccountInstruction, getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { createCloseAccountInstruction, getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { formatValue, getMinAmountOut, solExchangeToTokenBuy, tokenExchangeToSolBuy } from '@/shared/utils'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { TokenService } from '@/shared/api/tiktokin.ts'
@@ -285,7 +285,7 @@ const TiktokinPage: FC = () => {
                     {token.name}
                   </h1>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#2A2B2E]/80 text-[#14F195] border border-[#14F195]/20">
-                    ${token.symbol}
+                    ${token.symbol.toUpperCase()}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-4 text-sm text-[#9CA3AF] mt-1">
@@ -372,7 +372,10 @@ const TiktokinPage: FC = () => {
               <div className="p-4 lg:p-6">
                 <div className="grid grid-cols-2 gap-2 mb-6">
                   <button 
-                    onClick={() => setActiveTab('buy')}
+                    onClick={() => {
+                      setActiveTab('buy')
+                      setAmount(0)
+                    }}
                     disabled={loading}
                     className={`py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 ${
                       activeTab === 'buy' 
@@ -383,11 +386,14 @@ const TiktokinPage: FC = () => {
                     Buy
                   </button>
                   <button 
-                    onClick={() => setActiveTab('sell')}
+                    onClick={() => {
+                      setActiveTab('sell')
+                      setAmount(0)
+                    }}
                     disabled={loading}
                     className={`py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-200 ${
                       activeTab === 'sell' 
-                        ? 'bg-gradient-to-r from-[#EF4444] to-[#DC2626] text-white shadow-lg transform scale-[1.02]' 
+                        ? 'bg-[#FF6B6B] text-white shadow-lg transform scale-[1.02]' 
                         : 'bg-[#2A2B2E]/60 text-white hover:bg-[#3A3B3E]/60 hover:scale-[1.01]'
                     }`}
                   >
@@ -414,7 +420,7 @@ const TiktokinPage: FC = () => {
                       <span className="text-white font-semibold text-right">
                         {activeTab === 'buy' 
                           ? `${balance.toNumber().toFixed(5)} SOL` 
-                          : `${formatValue(tokenInfo?.balance ?? 0)} ${token.symbol}`
+                          : `${formatValue(tokenInfo?.balance ?? 0)} ${token.symbol.toUpperCase()}`
                         }
                       </span>
                     </div>
@@ -438,7 +444,7 @@ const TiktokinPage: FC = () => {
                             className="w-4 h-4 rounded-full" 
                           />
                           <span className="text-sm font-medium text-white">
-                            {activeTab === 'buy' ? 'SOL' : token.symbol}
+                            {activeTab === 'buy' ? 'SOL' : token.symbol.toUpperCase()}
                           </span>
                         </div>
                       </div>
@@ -493,7 +499,7 @@ const TiktokinPage: FC = () => {
                             </button>
                             <button 
                               onClick={() => setAmount(Number(tokenInfo?.balance))}
-                              className="px-3 py-2 bg-[#EF4444]/20 border border-[#EF4444]/40 rounded-lg text-xs font-medium text-[#EF4444] hover:bg-[#EF4444]/30 transition-all duration-200 hover:scale-105"
+                              className="px-3 py-2 bg-[#FF6B6B]/20 border border-[#FF6B6B]/40 rounded-lg text-xs font-medium text-[#FF6B6B] hover:bg-[#FF6B6B]/30 transition-all duration-200 hover:scale-105"
                             >
                               MAX
                             </button>
@@ -509,8 +515,8 @@ const TiktokinPage: FC = () => {
                       disabled={loading}
                       className={`w-full py-4 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                         activeTab === 'buy'
-                          ? 'bg-gradient-to-r from-[#14F195] to-[#13E085] text-black hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'
-                          : 'bg-gradient-to-r from-[#EF4444] to-[#DC2626] text-white hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'
+                          ? 'bg-gradient-to-r from-[#14F195] to-[#13E085] text-black hover:shadow-lg hover:scale-[1.03] active:scale-[0.98]'
+                          : 'bg-[#FF6B6B] text-white hover:shadow-lg hover:scale-[1.03] active:scale-[0.98]'
                       }`}
                     >
                       {loading ? (
@@ -519,7 +525,7 @@ const TiktokinPage: FC = () => {
                           Processing...
                         </div>
                       ) : (
-                        `${activeTab === 'buy' ? 'Buy' : 'Sell'} ${token.symbol}`
+                        `${activeTab === 'buy' ? 'Buy' : 'Sell'} ${token.symbol.toUpperCase()}`
                       )}
                     </button>
                   ) : (

@@ -1,17 +1,17 @@
 'use client'
+import useSolPrice from "@/features/useSolPrice";
 import { useTiktok } from "@/features/useTiktok";
-import { useTokenReserves } from "@/features/useTokenReserves";
-import { LIMIT } from "@/features/useTokensList";
-import { TokenDto } from "@/shared/api/tiktokin.ts";
+import BigNumber from "bignumber.js";
+import { BondingCurveAccount, LIMIT } from "@/features/useTokensList";
+import { TokenWithPriceDto } from "@/shared/api/tiktokin.ts";
 import { formatValue } from "@/shared/utils";
 import { IconCopy } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
-import numeral from "numeral";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-export const TokenCard = ({ token, index }: { token: TokenDto, index: number }) => {
-  const router = useRouter();
-  const { marketCap } = useTokenReserves(token.address)
+export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPriceDto, index: number, curveAccount: BondingCurveAccount }) => {
+  const { price: solPrice } = useSolPrice()
   const data = useTiktok(token.video_url ?? undefined)
   const [startLoading, setStartLoading] = useState(false);
 
@@ -26,10 +26,12 @@ export const TokenCard = ({ token, index }: { token: TokenDto, index: number }) 
 
   const [showTiktok, setShowTiktok] = useState(false);
 
+  const marketCap = new BigNumber(token.price).multipliedBy(curveAccount.realTokenReserves).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toString()
+
   return (
     <div 
       className="group cursor-pointer max-w-80 flex flex-col relative overflow-hidden rounded-2xl border border-[#2D2D2D] bg-[#121212] hover:border-white/20 transition-all animate-border-glow"
-      onClick={() => router.push(`/tiktokin/${token.id}`)}
+      onClick={() => redirect(`/tiktokin/${token.id}`)}
       style={{
         animation: 'borderGlow 0.8s ease-out',
         animationDelay: `${((index % LIMIT) || 0) * 0.05}s`,
@@ -101,7 +103,7 @@ export const TokenCard = ({ token, index }: { token: TokenDto, index: number }) 
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-[#888888] uppercase tracking-wide">Market Cap</span>
             <span className="text-sm font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-md">
-              {formatValue(marketCap, '$0,0.00')}
+              {formatValue(Number(marketCap), '$0,0.00')}
             </span>
           </div>
         </div>

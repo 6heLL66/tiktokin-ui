@@ -40,7 +40,7 @@ export default function HowToCreate() {
                 </div>
                 <h3 className="text-lg sm:text-xl font-semibold text-white mb-3">Step 1: Choose TikTok</h3>
                 <p className="text-sm sm:text-base text-white/70">
-                  Find an engaging TikTok video and comment with our template: @tiktokin {"{token_name}"} {"{symbol}"}
+                  Find an engaging TikTok video and comment with our template: @tiktokinsol {"{token_name}"} + {"{symbol}"}
                 </p>
               </div>
 
@@ -94,7 +94,7 @@ export default function HowToCreate() {
                     Here's how your comment should look when creating a token for a dance video
                   </p>
                   <div className="bg-blue-500/10 rounded-lg p-4 font-mono text-blue-300 border border-blue-500/30">
-                    @tiktokin ViralDance DANCE
+                    @tiktokinsol ViralDance + DANCE
                   </div>
                 </div>
               </div>

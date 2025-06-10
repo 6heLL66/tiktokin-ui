@@ -2,11 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type TokenCreateRequestDto = {
+export type TokenWithPriceDto = {
+    id: number;
     name: string;
     symbol: string;
     uri: string;
-    video_url: string;
+    address: string;
+    price: string;
+    video_url?: (string | null);
     user_id?: (string | null);
     user_name?: (string | null);
     user_url?: (string | null);
