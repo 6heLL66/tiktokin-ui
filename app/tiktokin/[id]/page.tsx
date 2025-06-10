@@ -236,8 +236,10 @@ const TiktokinPage: FC = () => {
     let prev: string;
     if (chartType === 'marketcap') {
       return [...(token?.snapshots ?? []), ...(chartRealTimeData ?? [])].map((snapshot) => {
+        let open = prev;
+        prev = snapshot.close;
         return {
-          open: new BigNumber(Number(snapshot.open)).multipliedBy(reserves?.realTokenReserves ?? 0).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toNumber(),
+          open: new BigNumber(Number(open || snapshot.open)).multipliedBy(reserves?.realTokenReserves ?? 0).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toNumber(),
           close: new BigNumber(Number(snapshot.close)).multipliedBy(reserves?.realTokenReserves ?? 0).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toNumber(),
           high: new BigNumber(Number(snapshot.high)).multipliedBy(reserves?.realTokenReserves ?? 0).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toNumber(),
           low: new BigNumber(Number(snapshot.low)).multipliedBy(reserves?.realTokenReserves ?? 0).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toNumber(),
