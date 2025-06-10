@@ -12,6 +12,8 @@ export const useTokenReserves = (tokenAddress?: string) => {
   const [chartSnapshots, setChartSnapshots] = useState<{price: number, created_at: string}[]>([]);
   const { chartInterval, setChartInterval } = useChartSettings();
 
+  const isMounted = useRef(false);
+
   const { price: solPrice } = useSolPrice();
 
   const [reserves, setReserves] = useState<{
@@ -72,6 +74,11 @@ export const useTokenReserves = (tokenAddress?: string) => {
 
   useEffect(() => {
     if (!price) return;
+
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
 
     setChartSnapshots(prev => [...prev, {
       price: new BigNumber(price).dividedBy(solPrice).toNumber(),

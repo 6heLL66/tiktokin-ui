@@ -233,6 +233,7 @@ const TiktokinPage: FC = () => {
   const { price: solPrice } = useSolPrice()
 
   const chartData = useMemo(() => {
+    let prev: string;
     if (chartType === 'marketcap') {
       return [...(token?.snapshots ?? []), ...(chartRealTimeData ?? [])].map((snapshot) => {
         return {
@@ -240,17 +241,19 @@ const TiktokinPage: FC = () => {
           close: new BigNumber(Number(snapshot.close)).multipliedBy(reserves?.realTokenReserves ?? 0).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toNumber(),
           high: new BigNumber(Number(snapshot.high)).multipliedBy(reserves?.realTokenReserves ?? 0).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toNumber(),
           low: new BigNumber(Number(snapshot.low)).multipliedBy(reserves?.realTokenReserves ?? 0).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toNumber(),
-          time: (new Date(snapshot.created_at).getTime()) / 1000 as Time
+          time: (new Date(snapshot.created_at).getTime() / 1000 - new Date().getTimezoneOffset() * 60) as Time
         }
       })
     }
-    return [...(token?.snapshots ?? []), ...(chartRealTimeData ?? [])].map((snapshot) => {
+    return [...(token?.snapshots ?? []), ...(chartRealTimeData ?? [])].map((snapshot, index) => {
+      let open = prev
+      prev = snapshot.close;
       return {
-        open: new BigNumber(Number(snapshot.open)).multipliedBy(solPrice).toNumber(),
+        open: new BigNumber(Number(open || snapshot.open)).multipliedBy(solPrice).toNumber(),
         close: new BigNumber(Number(snapshot.close)).multipliedBy(solPrice).toNumber(),
         high: new BigNumber(Number(snapshot.high)).multipliedBy(solPrice).toNumber(),
         low: new BigNumber(Number(snapshot.low)).multipliedBy(solPrice).toNumber(),
-        time: (new Date(snapshot.created_at).getTime()) / 1000 as Time
+        time: (new Date(snapshot.created_at).getTime() / 1000 - new Date().getTimezoneOffset() * 60) as Time
       }
     })
   }, [token, chartRealTimeData])

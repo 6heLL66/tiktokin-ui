@@ -100,6 +100,10 @@ export function PriceChart({ data, isCap }: PriceChartProps) {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         timeVisible: true,
         secondsVisible: true,
+        barSpacing: 8,
+        minBarSpacing: 4,
+        maxBarSpacing: 10,
+        rightOffset: 5,
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -118,8 +122,8 @@ export function PriceChart({ data, isCap }: PriceChartProps) {
       wickDownColor: '#ef4444',
       priceFormat: {
         type: 'price',
-        minMove: isCap ? 1 : 0.000000001,
-        precision: isCap ? 0 : 8,
+        minMove: isCap ? 1 : 0.0000000000001,
+        precision: isCap ? 0 : 12,
       },
     });
 
