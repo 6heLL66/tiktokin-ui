@@ -23,8 +23,6 @@ export const useAnchor = () => {
 
     useEffect(() => {
         const initAnchor = async () => {
-            if (!wallet.publicKey || !wallet) return;
-            
             const provider = new AnchorProvider(
                 connection,
                 wallet as any,
