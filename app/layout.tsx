@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TikTokIn - Web3 TikTok Platform",
-  description: "Decentralized TikTok platform on Solana blockchain",
+  title: "TikTokIn - Create solana token linked to tiktok video",
+  description: "Revolutionary platform for creating tokens based on TikTok content on the Solana network",
 };
 
 export default function RootLayout({

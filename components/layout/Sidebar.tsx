@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconHome, IconCoin, IconBrandTwitter, IconBrandTiktok, IconInfoCircle, IconQuestionMark, IconMenu2, IconX } from "@tabler/icons-react";
 import { useState } from "react";
+import Image from "next/image";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,14 +35,9 @@ export default function Sidebar() {
       `}>
         <div className="p-6 md:p-4">
           <div className="flex items-center gap-4 mb-12 px-2 md:justify-center lg:justify-start">
-            <div className="w-14 h-14 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-white shadow-lg shadow-black/20 ring-1 ring-white/5 relative overflow-hidden before:absolute before:inset-[1px] before:rounded-xl before:bg-gradient-to-br before:from-white/10 before:to-transparent before:z-0">
+            <div className="w-15 h-15 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-white shadow-lg shadow-black/20 ring-1 ring-white/5 relative overflow-hidden before:absolute before:inset-[1px] before:rounded-xl before:bg-gradient-to-br before:from-white/10 before:to-transparent before:z-0">
               <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.03] to-transparent"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10 md:w-6 md:h-6 lg:w-8 lg:h-8">
-                  <path d="M6 8H26V12H6V8Z" fill="rgba(255,255,255,0.9)"/>
-                  <path d="M14 14H18V24H14V14Z" fill="rgba(255,255,255,0.9)"/>
-                </svg>
-              </div>
+              <Image className="absolute inset-0 flex items-center justify-center" src="/logo.jpg" alt="Logo" width={120} height={120} />
             </div>
             <div className="flex flex-col md:hidden lg:flex">
               <span className="text-2xl lg:text-2xl font-bold text-zinc-100">
