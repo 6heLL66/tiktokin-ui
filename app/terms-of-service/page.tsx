@@ -31,7 +31,7 @@ export default function TermsOfServicePage() {
             <div className="p-6 lg:p-8 space-y-8">
               
               <div className="border-b border-[#2A2B2E]/40 pb-6">
-                <p className="text-[#9CA3AF] text-sm mb-4">Last updated: December 2024</p>
+                <p className="text-[#9CA3AF] text-sm mb-4">Last updated: June 2025</p>
                 <p className="text-white leading-relaxed">
                   These Terms of Service ("Terms") govern your use of TikTokin, a decentralized application built on the Solana blockchain. By accessing or using our platform, you agree to be bound by these terms.
                 </p>
@@ -247,32 +247,6 @@ export default function TermsOfServicePage() {
                     <p className="text-[#9CA3AF] leading-relaxed text-sm">
                       We may modify, suspend, or discontinue the platform at any time without prior notice. We are not liable for any modification, suspension, or discontinuation of services.
                     </p>
-                  </div>
-                </div>
-              </section>
-
-              <section className="space-y-4">
-                <h2 className="text-2xl font-semibold text-[#14F195] flex items-center gap-3">
-                  <div className="w-8 h-8 bg-[#14F195]/20 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-[#14F195]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
-                    </svg>
-                  </div>
-                  Contact Information
-                </h2>
-                <div className="bg-[#0F1011]/60 border border-[#2A2B2E]/40 rounded-xl p-6">
-                  <p className="text-[#9CA3AF] leading-relaxed mb-4">
-                    If you have any questions about these Terms of Service, please contact us:
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex items-center gap-3 text-white">
-                      <div className="w-8 h-8 bg-[#14F195]/20 rounded-lg flex items-center justify-center">
-                        <svg className="w-4 h-4 text-[#14F195]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <span>legal@tiktokin.app</span>
-                    </div>
                   </div>
                 </div>
               </section>

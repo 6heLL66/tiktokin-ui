@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HowToCreate() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a1b1e] to-[#141517] p-2 sm:p-8 pb-20 lg:p-16">
@@ -145,6 +147,7 @@ export default function HowToCreate() {
                 Begin creating tokens from your favorite TikTok content and start earning passive income
               </p>
               <div className="flex justify-center">
+                <Link href="https://tiktok.com" target="_blank">
                 <button className="group relative px-10 py-5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white font-bold text-lg rounded-2xl hover:from-primary-400 hover:to-secondary-400 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-primary-500/25 hover:scale-105 transform overflow-hidden border-2 border-white/20 hover:border-white/40">
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                   <div className="relative flex items-center gap-3">
@@ -154,6 +157,7 @@ export default function HowToCreate() {
                     </svg>
                   </div>
                 </button>
+                </Link>
               </div>
             </div>
           </div>

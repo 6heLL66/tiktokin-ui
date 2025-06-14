@@ -54,7 +54,7 @@ export default function Sidebar() {
               { href: "/what-is-tiktokin", icon: IconQuestionMark, label: "What is Tiktokin?" },
               { href: "/how-to-create", icon: IconInfoCircle, label: "How to create " },
               { href: "/privacy-policy", icon: IconShieldLock, label: "Privacy Policy" },
-              { href: "/terms", icon: IconFileText, label: "Terms & Conditions" },
+              { href: "/terms-of-service", icon: IconFileText, label: "Terms & Conditions" },
             ].map((item) => {
               const isActive = pathname === item.href;
               return (
