@@ -3,32 +3,11 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Paginated_TokenWithPriceDto_ } from '../models/Paginated_TokenWithPriceDto_';
-import type { TokenCreateRequestDto } from '../models/TokenCreateRequestDto';
-import type { TokenDto } from '../models/TokenDto';
 import type { TokenRetrieveDto } from '../models/TokenRetrieveDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class TokenService {
-    /**
-     * Token Create
-     * @param requestBody
-     * @returns TokenDto Successful Response
-     * @throws ApiError
-     */
-    public static tokenCreateTokensPost(
-        requestBody: TokenCreateRequestDto,
-    ): CancelablePromise<TokenDto> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/tokens',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: `Validation Error`,
-            },
-        });
-    }
     /**
      * Token List
      * @param search

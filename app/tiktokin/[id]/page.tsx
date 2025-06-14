@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, useMemo, useState } from 'react'
+import { FC, useEffect, useMemo, useState } from 'react'
 import {PriceChart} from '@/app/components/PriceChart'
 import { useAnchor } from '@/features/useAnchor'
 import { ClipLoader, MoonLoader } from 'react-spinners'
@@ -8,14 +8,14 @@ import { useParams } from 'next/navigation'
 import { BN } from '@coral-xyz/anchor'
 import BigNumber from "bignumber.js";
 import { ComputeBudgetProgram, Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
-import { useWallet } from '@solana/wallet-adapter-react'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { useBalance } from '@/features/useBalance'
 import { SlippageModal } from '@/app/components/SlippageModal'
 import { useToken } from '@/features/useToken'
 import { useSlippage } from '@/features/useSlippage'
 import { WalletConnect } from '@/app/solana/WalletProvider/ui'
-import { createCloseAccountInstruction, getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { formatValue, getMinAmountOut, solExchangeToTokenBuy, tokenExchangeToSolBuy } from '@/shared/utils'
+import { createCloseAccountInstruction, getAccount, getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { fetchRpcPoolInfo, formatValue, getMinAmountOut, solExchangeToTokenBuy, tokenExchangeToSolBuy } from '@/shared/utils'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { TokenService } from '@/shared/api/tiktokin.ts'
 import { Time } from 'lightweight-charts'
@@ -27,6 +27,7 @@ import { useChartSettings } from '@/features/useChartInterval'
 import { useConfig } from '@/features/useConfig'
 
 const CP_SWAP_PROGRAM_ID = new PublicKey('CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW');
+const ammConfig = new PublicKey('9zSzfkYy6awexsHvmggeH36pfVUdDGyCcwmjT3AQPBj6');
 
 function getPoolState(
   ammConfig: PublicKey,
@@ -58,6 +59,7 @@ const TiktokinPage: FC = () => {
   const { data: {tiktokinProgram} } = useAnchor();
 
   const [loading, setLoading] = useState(false);
+  const {connection} = useConnection();
 
   const { chartInterval, setChartInterval, chartType, setChartType } = useChartSettings();
 
@@ -86,6 +88,16 @@ const TiktokinPage: FC = () => {
 
   const {tokenInfo, fetchTokenInfo} = useToken(token?.address);
   const { marketCap, chartRealTimeData, reserves } = useTokenReserves(token?.address);
+
+  // useEffect(() => {
+  //   if (!token || !wallet.publicKey) return;
+
+  //   fetchRpcPoolInfo(getPoolState(ammConfig, NATIVE_MINT, new PublicKey(token.address)).toBase58(), {
+  //     owner: wallet.publicKey,
+  //     connection,
+  //     cluster: 'devnet'
+  //   })
+  // }, [token, wallet])
 
   const handleBuy = async() => {
     if (!token || Number.isNaN(amount) || !wallet.publicKey || !config?.feeRecipient) return;
@@ -164,7 +176,7 @@ const TiktokinPage: FC = () => {
   const migrate = async () => {
     if (!token || !wallet.publicKey) return;
 
-    const ammConfig = new PublicKey('9zSzfkYy6awexsHvmggeH36pfVUdDGyCcwmjT3AQPBj6');
+   
     const token0Mint = NATIVE_MINT;
     const token1Mint = new PublicKey(token.address);
 
@@ -204,32 +216,6 @@ const TiktokinPage: FC = () => {
       });
   }
 
-  const launch = async () => {
-    if (!token || !wallet.publicKey) return;
-
-    const tokenKp = Keypair.generate();
-    const metadataProgramId = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
-    const [metadataPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('metadata'),
-        metadataProgramId.toBuffer(),
-        tokenKp.publicKey.toBuffer(),
-      ],
-      metadataProgramId
-    );
-
-    const tx = await tiktokinProgram?.methods.launch('token_test', 'TTTT', "https://www.google.com")
-      .accounts({
-        creator: wallet.publicKey,
-        tokenMint: tokenKp.publicKey,
-        tokenMetadataAccount: metadataPDA,
-      })
-      .signers([tokenKp])
-      .rpc({skipPreflight: true});
-
-    console.log(tx);
-  }
-
   const { price: solPrice } = useSolPrice()
 
   const chartData = useMemo(() => {
@@ -266,6 +252,9 @@ const TiktokinPage: FC = () => {
 
   const progressPercentage = Math.min((marketCap / curveLimit.multipliedBy(solPrice).toNumber()) * 100, 100);
   const isReadyForMigration = marketCap >= curveLimit.multipliedBy(solPrice).toNumber() && curveLimit.toNumber() > 0;
+  const isMigrated = token.is_completed;
+  const poolId = getPoolState(ammConfig, NATIVE_MINT, new PublicKey(token.address)).toBase58()
+  const raydiumUrl = `https://raydium.io/clmm/create-position/?pool_id=${poolId}`
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F1011] to-[#1A1B1E] text-white">
@@ -573,14 +562,25 @@ const TiktokinPage: FC = () => {
                       </div>
                     </div>
 
-                    {/* {isReadyForMigration && (
-                      <button 
-                        onClick={migrate}
-                        className="w-full py-3 bg-gradient-to-r from-[#14F195] to-[#13E085] text-black rounded-xl text-sm font-semibold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
-                      >
-                        Migrate to Raydium
-                      </button>
-                    )} */}
+                    {isReadyForMigration && !isMigrated && (
+                      <div className="text-sm text-[#9CA3AF] bg-[#2A2B2E]/40 p-3 rounded-lg border border-[#3A3B3E]/40">
+                        Token will be migrated to Raydium within 10 minutes
+                      </div>
+                    )}
+
+                    {isMigrated && (
+                      <div className="space-y-3">
+                        <div className="text-sm text-[#9CA3AF] bg-[#2A2B2E]/40 p-3 rounded-lg border border-[#3A3B3E]/40">
+                          Token has been successfully migrated to Raydium
+                        </div>
+                        <button 
+                          onClick={() => window.open(raydiumUrl, '_blank')}
+                          className="w-full py-3 bg-gradient-to-r from-[#9945FF] to-[#7B2CBF] text-white rounded-xl text-sm font-semibold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                        >
+                          View on Raydium
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

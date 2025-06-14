@@ -13,5 +13,6 @@ export type TokenWithPriceDto = {
     user_id?: (string | null);
     user_name?: (string | null);
     user_url?: (string | null);
+    is_completed: boolean;
 };
 

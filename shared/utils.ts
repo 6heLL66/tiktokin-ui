@@ -1,6 +1,9 @@
 import { BN } from "@coral-xyz/anchor";
 import numeral from "numeral";
+import { Cluster, Raydium } from "@raydium-io/raydium-sdk-v2";
 import { TokenSnapshotDto } from "./api/tiktokin.ts/models/TokenSnapshotDto";
+import { Connection } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 
 export const solExchangeToTokenBuy = (solReserve: BN, tokenReserve: BN, amount: BN) => {
     console.log(amount.toString(), solReserve.toString(), tokenReserve.toString())
@@ -71,4 +74,22 @@ export const groupSnapshotsByInterval = (
     };
   }).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 };
+
+export const fetchRpcPoolInfo = async (id: string, options: { owner: PublicKey, connection: Connection, cluster: Cluster }) => {
+  const raydium = await Raydium.load({
+    owner: options.owner,
+    connection: options.connection,
+    cluster: options.cluster,
+    disableFeatureCheck: true,
+    disableLoadToken: true,
+    blockhashCommitment: 'finalized',
+  })
+
+  const res = await raydium.cpmm.getRpcPoolInfos([id])
+
+  const pool1Info = res[id]
+
+  console.log('SOL-RAY pool price:', pool1Info.poolPrice)
+  console.log('cpmm pool infos:', res)
+}
 

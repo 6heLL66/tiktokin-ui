@@ -13,6 +13,7 @@ export type TokenRetrieveDto = {
     user_id?: (string | null);
     user_name?: (string | null);
     user_url?: (string | null);
+    is_completed: boolean;
     snapshots: Array<TokenSnapshotDto>;
 };
 
