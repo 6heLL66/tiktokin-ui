@@ -506,7 +506,7 @@ const TiktokinPage: FC = () => {
                   {wallet.publicKey ? (
                     <button 
                       onClick={activeTab === 'buy' ? handleBuy : handleSell}
-                      disabled={loading}
+                      disabled={loading || isReadyForMigration}
                       className={`w-full py-4 rounded-xl text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                         activeTab === 'buy'
                           ? 'bg-gradient-to-r from-[#14F195] to-[#13E085] text-black hover:shadow-lg hover:scale-[1.03] active:scale-[0.98]'
