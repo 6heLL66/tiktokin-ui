@@ -43,8 +43,6 @@ export function TokensList() {
         }
     }, [tokens, query, markerRef]);
 
-    console.log(tokens)
-
     return (
         <main className="mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
             <section className="space-y-6 sm:space-y-10 py-6 sm:py-8">

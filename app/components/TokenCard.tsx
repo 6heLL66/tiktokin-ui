@@ -6,7 +6,7 @@ import { BondingCurveAccount, LIMIT } from "@/features/useTokensList";
 import { TokenWithPriceDto } from "@/shared/api/tiktokin.ts";
 import { formatValue } from "@/shared/utils";
 import { IconCopy } from "@tabler/icons-react";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
@@ -14,6 +14,8 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
   const { price: solPrice } = useSolPrice()
   const data = useTiktok(token.video_url ?? undefined)
   const [startLoading, setStartLoading] = useState(false);
+
+  const router = useRouter()
 
   const handleMouseEnter = () => {
     setStartLoading(true);
@@ -31,7 +33,9 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
   return (
     <div 
       className="group cursor-pointer max-w-80 flex flex-col relative overflow-hidden rounded-2xl border border-[#2D2D2D] bg-[#121212] hover:border-white/20 transition-all animate-border-glow"
-      onClick={() => redirect(`/tiktokin/${token.id}`)}
+      onClick={() => {
+        router.push(`/tiktokin/${token.id}`);
+      }}
       style={{
         animation: 'borderGlow 0.8s ease-out',
         animationDelay: `${((index % LIMIT) || 0) * 0.05}s`,

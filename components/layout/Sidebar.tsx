@@ -60,9 +60,7 @@ export default function Sidebar() {
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
-                  scroll={false}
-                  replace={true}
+                  href={item.href}         
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-4 md:gap-0 lg:gap-4 px-4 md:px-2 lg:px-4 py-3.5 md:py-4 lg:py-3.5 rounded-xl transition-all duration-200 group relative md:justify-center lg:justify-start ${
                     isActive 
