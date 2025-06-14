@@ -1,7 +1,7 @@
 'use client'
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { IconHome, IconCoin, IconBrandTwitter, IconBrandTiktok, IconInfoCircle, IconQuestionMark, IconMenu2, IconX } from "@tabler/icons-react";
+import { IconHome, IconCoin, IconBrandTwitter, IconBrandTiktok, IconInfoCircle, IconQuestionMark, IconMenu2, IconX, IconShieldLock, IconFileText } from "@tabler/icons-react";
 import { useState } from "react";
 import Image from "next/image";
 
@@ -53,6 +53,8 @@ export default function Sidebar() {
               { href: "/tiktokin/11111111", icon: IconCoin, label: "TikTokIn Token" },
               { href: "/what-is-tiktokin", icon: IconQuestionMark, label: "What is Tiktokin?" },
               { href: "/how-to-create", icon: IconInfoCircle, label: "How to create " },
+              { href: "/privacy-policy", icon: IconShieldLock, label: "Privacy Policy" },
+              { href: "/terms", icon: IconFileText, label: "Terms & Conditions" },
             ].map((item) => {
               const isActive = pathname === item.href;
               return (
