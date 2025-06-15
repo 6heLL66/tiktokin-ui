@@ -4,6 +4,7 @@ import { Cluster, Raydium } from "@raydium-io/raydium-sdk-v2";
 import { TokenSnapshotDto } from "./api/tiktokin.ts/models/TokenSnapshotDto";
 import { Connection } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
+import { CP_SWAP_PROGRAM_ID } from "./constants";
 
 export const solExchangeToTokenBuy = (solReserve: BN, tokenReserve: BN, amount: BN) => {
     return amount.mul(tokenReserve).div(solReserve.add(amount));
@@ -93,5 +94,31 @@ export const fetchRpcPoolInfo = async (id: string, options: { owner: PublicKey, 
 
   console.log('SOL-RAY pool price:', pool1Info.poolPrice)
   console.log('cpmm pool infos:', res)
+}
+
+export function getPoolState(
+  ammConfig: PublicKey,
+  token0Mint: PublicKey,
+  token1Mint: PublicKey,
+): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("pool", "utf8"),
+      ammConfig.toBuffer(),
+      token0Mint.toBuffer(),
+      token1Mint.toBuffer()
+    ],
+    CP_SWAP_PROGRAM_ID
+  )[0];
+}
+
+export function getLpMint(poolId: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("pool_lp_mint", "utf8"),
+      poolId.toBuffer()
+    ],
+    CP_SWAP_PROGRAM_ID
+  )[0];
 }
 

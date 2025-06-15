@@ -1,21 +1,21 @@
 'use client'
 
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import {PriceChart} from '@/app/components/PriceChart'
 import { useAnchor } from '@/features/useAnchor'
 import { ClipLoader, MoonLoader } from 'react-spinners'
 import { useParams } from 'next/navigation'
 import { BN } from '@coral-xyz/anchor'
 import BigNumber from "bignumber.js";
-import { ComputeBudgetProgram, Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
-import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { ComputeBudgetProgram, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
+import {useWallet } from '@solana/wallet-adapter-react'
 import { useBalance } from '@/features/useBalance'
 import { SlippageModal } from '@/app/components/SlippageModal'
 import { useToken } from '@/features/useToken'
 import { useSlippage } from '@/features/useSlippage'
 import { WalletConnect } from '@/app/solana/WalletProvider/ui'
-import { createCloseAccountInstruction, getAccount, getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { fetchRpcPoolInfo, formatValue, getMinAmountOut, solExchangeToTokenBuy, tokenExchangeToSolBuy } from '@/shared/utils'
+import { createCloseAccountInstruction, getAssociatedTokenAddressSync, NATIVE_MINT, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { formatValue, getLpMint, getMinAmountOut, getPoolState, solExchangeToTokenBuy, tokenExchangeToSolBuy } from '@/shared/utils'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { TokenService } from '@/shared/api/tiktokin.ts'
 import { Time } from 'lightweight-charts'
@@ -26,35 +26,7 @@ import { intervals } from './constants'
 import { useChartSettings } from '@/features/useChartInterval'
 import { useConfig } from '@/features/useConfig'
 import { ToastProvider, toastService } from './toasts'
-
-const CP_SWAP_PROGRAM_ID = new PublicKey('CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW');
-const ammConfig = new PublicKey('9zSzfkYy6awexsHvmggeH36pfVUdDGyCcwmjT3AQPBj6');
-
-function getPoolState(
-  ammConfig: PublicKey,
-  token0Mint: PublicKey,
-  token1Mint: PublicKey,
-): PublicKey {
-  return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("pool", "utf8"),
-      ammConfig.toBuffer(),
-      token0Mint.toBuffer(),
-      token1Mint.toBuffer()
-    ],
-    CP_SWAP_PROGRAM_ID
-  )[0];
-}
-
-function getLpMint(poolId: PublicKey): PublicKey {
-  return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("pool_lp_mint", "utf8"),
-      poolId.toBuffer()
-    ],
-    CP_SWAP_PROGRAM_ID
-  )[0];
-}
+import { ammConfig } from '@/shared/constants'
 
 const TiktokinPage: FC = () => {
   const { data: {tiktokinProgram} } = useAnchor();

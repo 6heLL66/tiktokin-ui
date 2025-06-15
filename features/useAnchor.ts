@@ -8,13 +8,12 @@ import { Tiktokin } from "@/types";
 import { createAssociatedTokenAccountInstruction } from "@solana/spl-token";
 import { getAccount } from "@solana/spl-token";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { TIKTOKIN_PROGRAM } from "@/shared/constants";
 interface AnchorData {
     tiktokinProgram: Program<Tiktokin>;
     provider: AnchorProvider;
     connection: Connection;
 }
-
-const TIKTOKIN_PROGRAM_ID = new PublicKey("DveezyD6efYCAmGa5SUAZiLaVFZZvxazKFs4yVzwydqB");
 
 export const useAnchor = () => {
     const wallet = useWallet();
@@ -30,7 +29,7 @@ export const useAnchor = () => {
             );
 
             try {
-                const idl = await Program.fetchIdl(TIKTOKIN_PROGRAM_ID, provider);
+                const idl = await Program.fetchIdl(TIKTOKIN_PROGRAM, provider);
                 const tiktokinProgram = new Program<Tiktokin>(idl, provider);
                 
                 setData({
