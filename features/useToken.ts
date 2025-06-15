@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { BigNumber } from 'bignumber.js'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 
@@ -31,8 +32,7 @@ export const useToken = (mintAddress?: string) => {
         publicKey,
         { mint }
       )
-
-      const balance = tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0
+      const balance = new BigNumber(tokenAccounts.value[0]?.account.data.parsed.info.tokenAmount.uiAmount || 0).toNumber()
 
       const mintInfo = await connection.getParsedAccountInfo(mint)
       const decimals = (mintInfo.value?.data as any)?.parsed?.info?.decimals || 0

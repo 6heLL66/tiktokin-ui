@@ -25,6 +25,7 @@ import numeral from 'numeral'
 import { intervals } from './constants'
 import { useChartSettings } from '@/features/useChartInterval'
 import { useConfig } from '@/features/useConfig'
+import { ToastProvider, toastService } from './toasts'
 
 const CP_SWAP_PROGRAM_ID = new PublicKey('CPMDWBwJDtYax9qW7AyRuVC19Cc4L4Vcy4n2BHAbHkCW');
 const ammConfig = new PublicKey('9zSzfkYy6awexsHvmggeH36pfVUdDGyCcwmjT3AQPBj6');
@@ -59,7 +60,6 @@ const TiktokinPage: FC = () => {
   const { data: {tiktokinProgram} } = useAnchor();
 
   const [loading, setLoading] = useState(false);
-  const {connection} = useConnection();
 
   const { chartInterval, setChartInterval, chartType, setChartType } = useChartSettings();
 
@@ -70,6 +70,7 @@ const TiktokinPage: FC = () => {
     queryKey: ["token", id, chartInterval],
     queryFn: () => TokenService.tokenRetrieveTokensTokenIdGet(Number(id), new Date(0).toISOString(), new Date(Date.now()).toISOString(), chartInterval),
     placeholderData: keepPreviousData,
+    refetchInterval: 60000,
 });
 
   const {data: tiktokData} = useQuery({
@@ -104,6 +105,8 @@ const TiktokinPage: FC = () => {
 
     setLoading(true)
 
+    const toastId = toastService.createLoadingToast('buy')
+
     try {
       const [curvePda] = PublicKey.findProgramAddressSync(
         [Buffer.from('bonding-curve'), new PublicKey(token.address).toBuffer()],
@@ -112,8 +115,12 @@ const TiktokinPage: FC = () => {
 
       const curveAccount = await tiktokinProgram.account.bondingCurve.fetch(curvePda);
 
-      const lamportsAmount = new BigNumber(amount.toString()).multipliedBy(LAMPORTS_PER_SOL);
+      console.log(curveAccount.virtualSolReserves.toString(), curveAccount.virtualTokenReserves.toString())
+
+      const lamportsAmount = new BigNumber(amount.toFixed(9)).multipliedBy(LAMPORTS_PER_SOL);
       const tokensAmount = solExchangeToTokenBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(lamportsAmount.toString()));
+
+      toastService.updateToConfirming(toastId)
 
       await tiktokinProgram?.methods.swap(new BN(lamportsAmount.toString()), new BN(0), getMinAmountOut(tokensAmount, new BN(slippage), new BN(config.buyFeePercent)))
         .accounts({
@@ -128,9 +135,12 @@ const TiktokinPage: FC = () => {
 
       updateBalance()
       fetchTokenInfo()
+      
+      toastService.updateToSuccess(toastId, new BigNumber(tokensAmount.toString()).dividedBy(LAMPORTS_PER_SOL).toNumber(), token.symbol, 'buy')
     } catch (error) {
       console.log(error)
       setLoading(false)
+      toastService.updateToError(toastId, 'buy')
     }
   }
 
@@ -138,6 +148,8 @@ const TiktokinPage: FC = () => {
     if (!token || Number.isNaN(amount) || !wallet.publicKey || !config?.feeRecipient) return;
 
     setLoading(true)
+
+    const toastId = toastService.createLoadingToast('sell')
 
     try {
       const [curvePda] = PublicKey.findProgramAddressSync(
@@ -147,11 +159,14 @@ const TiktokinPage: FC = () => {
 
       const curveAccount = await tiktokinProgram.account.bondingCurve.fetch(curvePda);
 
-      const tokensAmount = new BigNumber(Math.ceil(amount).toString()).multipliedBy(LAMPORTS_PER_SOL);
-      const lamportsAmount = tokenExchangeToSolBuy(new BN(curveAccount.virtualSolReserves), new BN(curveAccount.virtualTokenReserves), new BN(tokensAmount.toString()));
+      const tokensAmount = new BigNumber(amount.toFixed(9)).multipliedBy(LAMPORTS_PER_SOL);
+
+      const lamportsAmount = tokenExchangeToSolBuy(curveAccount.virtualSolReserves, curveAccount.virtualTokenReserves, new BN(tokensAmount.toString()));
 
       const userWsolAta = getAssociatedTokenAddressSync(NATIVE_MINT, wallet.publicKey);
       const unwrapSolIx = createCloseAccountInstruction(userWsolAta, wallet.publicKey, wallet.publicKey);
+
+      toastService.updateToConfirming(toastId)
 
       await tiktokinProgram?.methods.swap(new BN(tokensAmount.toString()), new BN(1), getMinAmountOut(new BN(lamportsAmount.toString()), new BN(slippage), new BN(config.sellFeePercent)))
         .accounts({
@@ -167,9 +182,12 @@ const TiktokinPage: FC = () => {
 
       updateBalance()
       fetchTokenInfo()
+      
+      toastService.updateToSuccess(toastId, new BigNumber(tokensAmount.toString()).dividedBy(LAMPORTS_PER_SOL).toNumber(), token.symbol, 'sell')
     } catch (error) {
       console.log(error)
       setLoading(false)
+      toastService.updateToError(toastId, 'sell')
     }
   }
 
@@ -258,6 +276,7 @@ const TiktokinPage: FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0F1011] to-[#1A1B1E] text-white">
+      <ToastProvider />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         
         <div className="bg-[#1A1B1E]/80 backdrop-blur-sm border border-[#2A2B2E]/60 rounded-xl p-4 lg:p-6 shadow-xl">
@@ -414,7 +433,7 @@ const TiktokinPage: FC = () => {
                       <span className="text-white font-semibold text-right">
                         {activeTab === 'buy' 
                           ? `${balance.toNumber().toFixed(5)} SOL` 
-                          : `${formatValue(tokenInfo?.balance ?? 0)} ${token.symbol.toUpperCase()}`
+                          : `${formatValue(tokenInfo?.balance || 0)} ${token.symbol.toUpperCase()}`
                         }
                       </span>
                     </div>
@@ -474,25 +493,25 @@ const TiktokinPage: FC = () => {
                         ) : (
                           <>
                             <button 
-                              onClick={() => setAmount(Number(tokenInfo?.balance) * 0.25)}
+                              onClick={() => setAmount(+new BigNumber(tokenInfo?.balance ?? 0).multipliedBy(0.25).toNumber().toFixed(9))}
                               className="px-3 py-2 bg-[#2A2B2E]/60 rounded-lg text-xs font-medium text-white hover:bg-[#3A3B3E]/60 transition-all duration-200 hover:scale-105"
                             >
                               25%
                             </button>
                             <button 
-                              onClick={() => setAmount(Number(tokenInfo?.balance) * 0.5)}
+                              onClick={() => setAmount(+new BigNumber(tokenInfo?.balance ?? 0).multipliedBy(0.5).toNumber().toFixed(9))}
                               className="px-3 py-2 bg-[#2A2B2E]/60 rounded-lg text-xs font-medium text-white hover:bg-[#3A3B3E]/60 transition-all duration-200 hover:scale-105"
                             >
                               50%
                             </button>
                             <button 
-                              onClick={() => setAmount(Number(tokenInfo?.balance) * 0.75)}
+                              onClick={() => setAmount(+new BigNumber(tokenInfo?.balance ?? 0).multipliedBy(0.75).toNumber().toFixed(9))}
                               className="px-3 py-2 bg-[#2A2B2E]/60 rounded-lg text-xs font-medium text-white hover:bg-[#3A3B3E]/60 transition-all duration-200 hover:scale-105"
                             >
                               75%
                             </button>
                             <button 
-                              onClick={() => setAmount(Number(tokenInfo?.balance))}
+                              onClick={() => setAmount(+new BigNumber(tokenInfo?.balance ?? 0).toNumber().toFixed(9))}
                               className="px-3 py-2 bg-[#FF6B6B]/20 border border-[#FF6B6B]/40 rounded-lg text-xs font-medium text-[#FF6B6B] hover:bg-[#FF6B6B]/30 transition-all duration-200 hover:scale-105"
                             >
                               MAX

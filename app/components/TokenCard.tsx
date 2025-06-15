@@ -5,7 +5,7 @@ import BigNumber from "bignumber.js";
 import { BondingCurveAccount, LIMIT } from "@/features/useTokensList";
 import { TokenWithPriceDto } from "@/shared/api/tiktokin.ts";
 import { formatValue } from "@/shared/utils";
-import { IconCopy } from "@tabler/icons-react";
+import { IconCopy, IconCheck } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
@@ -14,6 +14,7 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
   const { price: solPrice } = useSolPrice()
   const data = useTiktok(token.video_url ?? undefined)
   const [startLoading, setStartLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const router = useRouter()
 
@@ -114,7 +115,21 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
         
         <div className="mt-4 pt-4 border-t border-[#2D2D2D] flex justify-between items-center absolute bottom-4 left-4 right-4">
           <span className="font-mono text-xs text-[#666666]">{token.address.slice(0, 6)}...{token.address.slice(-8)}</span>
-          <button className="text-xs text-[#666666]" onClick={(e) => {e.stopPropagation(); navigator.clipboard.writeText(token.address)}}><IconCopy className="w-4 h-4 cursor-pointer hover:brightness-145" /></button>
+          <button 
+            className="text-xs text-[#666666] transition-all duration-200" 
+            onClick={(e) => {
+              e.stopPropagation(); 
+              navigator.clipboard.writeText(token.address);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            }}
+          >
+            {copied ? (
+              <IconCheck className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <IconCopy className="w-4 h-4 cursor-pointer hover:brightness-145" />
+            )}
+          </button>
         </div>
       </div>
     </div>

@@ -6,7 +6,6 @@ import { Connection } from "@solana/web3.js";
 import { PublicKey } from "@solana/web3.js";
 
 export const solExchangeToTokenBuy = (solReserve: BN, tokenReserve: BN, amount: BN) => {
-    console.log(amount.toString(), solReserve.toString(), tokenReserve.toString())
     return amount.mul(tokenReserve).div(solReserve.add(amount));
 }
 
@@ -27,6 +26,9 @@ export const getMinAmountOut = (amount: BN, slippage: BN, fee: BN) => {
 }
 
 export const formatValue = (value: number, format: string = '0,0.00') => {
+    if (value <= 3e-4 && value > 0) {
+      return '< 0.0001';
+    }
     if (value >= 1000000) {
       return `${numeral(value / 1000000).format(format)}M`;
     } else if (value >= 1000) {
