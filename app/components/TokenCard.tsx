@@ -29,7 +29,7 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
 
   const [showTiktok, setShowTiktok] = useState(false);
 
-  const marketCap = new BigNumber(token.price).multipliedBy(curveAccount.realTokenReserves).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toString()
+  const marketCap = new BigNumber(token.price).multipliedBy(curveAccount?.realTokenReserves ?? 0).multipliedBy(solPrice).dividedBy(LAMPORTS_PER_SOL).toString()
 
   return (
     <div 
