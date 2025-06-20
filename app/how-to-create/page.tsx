@@ -87,7 +87,7 @@ export default function HowToCreate() {
                     Use this exact template when commenting on TikTok videos to create tokens automatically
                   </p>
                   <div className="bg-black/30 rounded-lg p-4 font-mono text-green-400 border border-green-500/30">
-                    @tiktokin {"{token_name}"} {"{symbol}"}
+                    @tiktokinsol {"{token_name}"} + {"{symbol}"}
                   </div>
                 </div>
                 <div>
