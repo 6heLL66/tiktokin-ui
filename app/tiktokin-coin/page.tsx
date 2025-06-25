@@ -46,6 +46,13 @@ export default function TIKCoinPage() {
               </div>
             </div>
 
+            <iframe 
+            src="https://pump.fun/coin/4c7GJc2wrJtvjV64Q7c7QAT7zy456xFsFucovgB1pump"
+            className="w-full h-96 rounded-2xl sm:rounded-3xl"
+            title="TIK Coin on Pump.fun"
+            allowFullScreen
+            ></iframe>
+
             <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
               <div className="rounded-xl sm:rounded-2xl bg-gray-900/50 border border-gray-800 p-6 sm:p-8 backdrop-blur-sm hover:bg-gray-800/50 transition-all duration-300 group relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-16 h-16 bg-pink-500/5 rounded-full -translate-y-8 translate-x-8 group-hover:scale-150 transition-transform duration-500"></div>

@@ -50,7 +50,7 @@ export default function Sidebar() {
           <nav className="space-y-1.5">
             {[
               { href: "/", icon: IconHome, label: "TikTokins" },
-              { href: "/tiktokin-coin", icon: IconCoin, label: "TikTokIn Token" },
+              // { href: "/tiktokin-coin", icon: IconCoin, label: "TikTokIn Token" },
               { href: "/what-is-tiktokin", icon: IconQuestionMark, label: "What is Tiktokin?" },
               { href: "/how-to-create", icon: IconInfoCircle, label: "How to create " },
               { href: "/privacy-policy", icon: IconShieldLock, label: "Privacy Policy" },
