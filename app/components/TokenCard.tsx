@@ -9,6 +9,7 @@ import { IconCopy, IconCheck } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import Link from "next/link";
 
 export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPriceDto, index: number, curveAccount: BondingCurveAccount }) => {
   const { price: solPrice } = useSolPrice()
@@ -34,9 +35,6 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
   return (
     <div 
       className="group cursor-pointer max-w-80 flex flex-col relative overflow-hidden rounded-2xl border border-[#2D2D2D] bg-[#121212] hover:border-white/20 transition-all animate-border-glow"
-      onClick={() => {
-        router.push(`/tiktokin/${token.id}`);
-      }}
       style={{
         animation: 'borderGlow 0.8s ease-out',
         animationDelay: `${((index % LIMIT) || 0) * 0.05}s`,
@@ -89,6 +87,8 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
         }
       </div>
       
+      <Link href={`/tiktokin/${token.id}`}>
+
       <div className="p-3 flex flex-col justify-between pb-16">
         <div className="flex items-center gap-3 mb-4">
           <img className="h-10 w-10 rounded-full bg-[#1D1D1D] border border-[#2D2D2D]" src={token.uri} alt={token.name} width={40} height={40} />
@@ -132,6 +132,8 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
           </button>
         </div>
       </div>
+      </Link>
+      
     </div>
   )
 } 
