@@ -9,6 +9,7 @@ import { IconCopy, IconCheck } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPriceDto, index: number, curveAccount: BondingCurveAccount }) => {
@@ -16,8 +17,6 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
   const data = useTiktok(token.video_url ?? undefined)
   const [startLoading, setStartLoading] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  const router = useRouter()
 
   const handleMouseEnter = () => {
     setStartLoading(true);
@@ -35,6 +34,9 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
   return (
     <div 
       className="group cursor-pointer max-w-80 flex flex-col relative overflow-hidden rounded-2xl border border-[#2D2D2D] bg-[#121212] hover:border-white/20 transition-all animate-border-glow"
+      onClick={() => {
+        redirect(`/tiktokin/${token.id}`);
+      }}
       style={{
         animation: 'borderGlow 0.8s ease-out',
         animationDelay: `${((index % LIMIT) || 0) * 0.05}s`,
@@ -86,8 +88,6 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
           )
         }
       </div>
-      
-      <Link href={`/tiktokin/${token.id}`}>
 
       <div className="p-3 flex flex-col justify-between pb-16">
         <div className="flex items-center gap-3 mb-4">
@@ -132,7 +132,6 @@ export const TokenCard = ({ token, index, curveAccount }: { token: TokenWithPric
           </button>
         </div>
       </div>
-      </Link>
       
     </div>
   )
